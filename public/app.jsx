@@ -769,7 +769,7 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete }) => {
                 color: 'var(--ink-soft)', marginTop: 6,
               }}>
                 {item.author || item.artist || item.location || ''}
-                {item.location && ' · '}{fmtDate(item.date)}
+                {(item.author || item.artist || item.location) && ' · '}{fmtDate(item.date)}
                 {item.price ? ` · $${item.price}` : ''}
               </div>
             </div>
@@ -792,9 +792,6 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete }) => {
             </div>
           )}
 
-          {/* Cooking details — ingredients, scaling, instructions */}
-          {catId === 'cooking' && <CookingDetails item={item} />}
-
           {/* Scores */}
           {isCafe ? (
             <div style={{ marginBottom: 28 }}>
@@ -809,6 +806,9 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete }) => {
               <ScoreBadge score={item.score} label="score" size="xl" color="var(--ink)" />
             </div>
           )}
+
+          {/* Cooking details — ingredients, scaling, instructions */}
+          {catId === 'cooking' && <CookingDetails item={item} />}
 
           {/* Tags */}
           {item.tags && (
