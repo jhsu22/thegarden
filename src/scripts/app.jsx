@@ -237,8 +237,8 @@ const HomeView = ({ weights, onOpen, onAdd, canEdit }) => {
     const d = new Date(r.date + 'T12:00:00');
     return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
   }).length;
-  const avg = +(feed.reduce((s, r) => s + r._score, 0) / feed.length).toFixed(1);
-  const top = [...feed].sort((a, b) => b._score - a._score)[0];
+  const avg = feed.length ? +(feed.reduce((s, r) => s + r._score, 0) / feed.length).toFixed(1) : null;
+  const top = feed.length ? [...feed].sort((a, b) => b._score - a._score)[0] : null;
 
   return (
     <div>
@@ -273,7 +273,7 @@ const HomeView = ({ weights, onOpen, onAdd, canEdit }) => {
         <StatTile value={total} label="Entries logged" sub="across six beds" />
         <StatTile value={thisMonth} label="This month" sub={thisMonthKey.toLowerCase()} />
         <StatTile value={fmtScore(avg)} label="Average score" sub="all categories" />
-        <StatTile value={fmtScore(top._score)} label="Top of garden" sub={top.name} />
+        <StatTile value={top ? fmtScore(top._score) : '—'} label="Top of garden" sub={top ? top.name : 'nothing yet'} />
       </div>
 
       {/* Categories peek */}

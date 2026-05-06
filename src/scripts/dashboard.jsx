@@ -18,6 +18,16 @@ const DashboardView = ({ weights, onOpen }) => {
   const [hover, setHover] = useStateD(null);
   const [filterCat, setFilterCat] = useStateD(null);
 
+  if (feed.length === 0) {
+    return (
+      <div style={{ padding: '80px 0', textAlign: 'center' }}>
+        <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 18, color: 'var(--ink-soft)' }}>
+          nothing to chart yet — add some entries first.
+        </div>
+      </div>
+    );
+  }
+
   // Bounds
   const dates = feed.map(r => +new Date(r.date + 'T12:00:00'));
   const minD = Math.min(...dates);
@@ -35,8 +45,8 @@ const DashboardView = ({ weights, onOpen }) => {
 
   // Stats
   const total = feed.length;
-  const avg = +(feed.reduce((s, r) => s + r._score, 0) / total).toFixed(1);
-  const top = [...feed].sort((a, b) => b._score - a._score)[0];
+  const avg = total ? +(feed.reduce((s, r) => s + r._score, 0) / total).toFixed(1) : null;
+  const top = total ? [...feed].sort((a, b) => b._score - a._score)[0] : null;
 
   // Average per category for the legend
   const byCat = CATEGORIES.map((c) => {
@@ -239,7 +249,7 @@ const DashboardView = ({ weights, onOpen }) => {
         }}>
           <FootStat label="Logged" value={visible.length} sub={filterCat ? CATEGORIES.find(c => c.id === filterCat)?.label.toLowerCase() : 'this year'} />
           <FootStat label="Average" value={fmtScore(visibleAvg)} sub="weighted" />
-          <FootStat label="Highest" value={fmtScore(top._score)} sub={top.name} />
+          <FootStat label="Highest" value={top ? fmtScore(top._score) : '—'} sub={top ? top.name : '—'} />
           <FootStat
             label="Beds active" value={byCat.filter(b => b.count > 0).length}
             sub={`of ${byCat.length}`}
