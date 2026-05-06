@@ -68,10 +68,6 @@ const PhotoDisplay = ({ entryId, tone, shape, size = 'md', label }) => {
   }, [entryId]);
 
   const dims = { sm: 56, md: 96, lg: 160, xl: 240 }[size] || 96;
-  const radius =
-    shape === 'circle'  ? '50%' :
-    shape === 'arch'    ? `${dims / 2}px ${dims / 2}px 14px 14px` :
-    '14px';
 
   if (src) {
     return (
@@ -79,14 +75,14 @@ const PhotoDisplay = ({ entryId, tone, shape, size = 'md', label }) => {
         src={src}
         alt={label || ''}
         style={{
-          width: dims, height: dims, borderRadius: radius,
+          width: dims, height: dims, borderRadius: 14,
           objectFit: 'cover', flex: 'none', display: 'block',
           boxShadow: 'inset 0 0 0 1px rgba(60, 40, 50, 0.08)',
         }}
       />
     );
   }
-  return <PhotoPlaceholder tone={tone} shape={shape} size={size} label={label} />;
+  return <PhotoPlaceholder tone={tone} shape="rounded" size={size} label={label} />;
 };
 
 // ─── PhotoUpload ──────────────────────────────────────────────────────────────
