@@ -130,10 +130,12 @@ const CoffeeDetails = ({ item }) => {
         </div>
       )}
 
-      {/* Flavor wheel — right, slightly wider than profile column */}
+      {/* Flavor wheel — fills remaining space, hex centered within it */}
       {hasFlavors && (
-        <div style={{ flex: '0 0 auto', width: 210 }}>
-          <HexRadar flavors={item.flavors} />
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ width: 350 }}>
+            <HexRadar flavors={item.flavors} />
+          </div>
         </div>
       )}
     </div>
