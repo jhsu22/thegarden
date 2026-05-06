@@ -77,20 +77,11 @@ const HexRadar = ({ flavors }) => {
         const [x2, y2] = pt(i, MAX);
         return <line key={i} x1={cx} y1={cy} x2={x2} y2={y2} stroke="var(--rule)" strokeWidth={0.7} />;
       })}
-      {/* Data fill */}
+      {/* Data fill — soft pink, no vertex dots */}
       <path d={dataShape}
-        fill="var(--butter)" fillOpacity={0.4}
-        stroke="var(--accent-strong)" strokeWidth={1.8} strokeLinejoin="round"
+        fill="var(--accent)" fillOpacity={0.55}
+        stroke="var(--accent-strong)" strokeWidth={1.6} strokeLinejoin="round"
       />
-      {/* Data dots */}
-      {COFFEE_FLAVORS.map(({ key }, i) => {
-        const [x, y] = pt(i, flavors[key] || 0);
-        return (
-          <circle key={key} cx={x} cy={y} r={3.5}
-            fill="var(--accent-strong)" stroke="var(--paper)" strokeWidth={1.4}
-          />
-        );
-      })}
       {/* Labels */}
       {COFFEE_FLAVORS.map(({ label }, i) => {
         const a = ang(i);
@@ -109,63 +100,47 @@ const HexRadar = ({ flavors }) => {
 };
 
 // ─── CoffeeDetails ────────────────────────────────────────────────────────────
-// Shown in the detail modal below the score, for coffee entries only.
 const CoffeeDetails = ({ item }) => {
-  const hasAttrs   = item.attributes && Object.values(item.attributes).some(Boolean);
+  const hasAttrs   = item.attributes && Object.values(item.attributes).some(v => v != null);
   const hasFlavors = item.flavors    && Object.values(item.flavors).some(Boolean);
   if (!hasAttrs && !hasFlavors) return null;
 
   return (
-    <div style={{ marginBottom: 28 }}>
-      {/* Circle indicators */}
-      {hasAttrs && (
-        <div style={{ marginBottom: 24 }}>
+    <div style={{ marginBottom: 28, display: 'flex', gap: 28, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+      {/* Flavor wheel — left, takes available space */}
+      {hasFlavors && (
+        <div style={{ flex: '1 1 200px' }}>
           <div style={{
             fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.6,
-            textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 14,
-          }}>Profile</div>
+            textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 10,
+          }}>Flavor Profile</div>
+          <HexRadar flavors={item.flavors} />
+        </div>
+      )}
+
+      {/* Profile circles — right, fixed width */}
+      {hasAttrs && (
+        <div style={{ flex: '0 0 auto', minWidth: 160 }}>
           <div style={{
-            borderRadius: 12, border: '1px solid var(--rule)', overflow: 'hidden',
-          }}>
-            {COFFEE_ATTRS.map(({ key, label }, i) => (
-              <div key={key} style={{
-                display: 'flex', alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '11px 18px',
-                borderBottom: i < COFFEE_ATTRS.length - 1 ? '1px solid var(--rule)' : 'none',
-                background: i % 2 === 0 ? 'var(--paper)' : 'var(--paper-warm)',
-              }}>
-                <span style={{
-                  fontFamily: 'var(--font-ui)', fontSize: 14, color: 'var(--ink)',
-                  minWidth: 110,
-                }}>{label}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.6,
+            textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 10,
+          }}>Profile</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {COFFEE_ATTRS.map(({ key, label }) => (
+              <div key={key}>
+                <div style={{
+                  fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: 1,
+                  textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 5,
+                }}>{label}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <CircleRating value={item.attributes[key] || 0} />
                   <span style={{
                     fontFamily: 'var(--font-mono)', fontSize: 11,
-                    color: 'var(--ink-soft)', minWidth: 24, textAlign: 'right',
-                    fontVariantNumeric: 'tabular-nums',
+                    color: 'var(--ink-soft)', fontVariantNumeric: 'tabular-nums',
                   }}>{item.attributes[key] || 0}</span>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Hexagonal flavor wheel */}
-      {hasFlavors && (
-        <div>
-          <div style={{
-            fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.6,
-            textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 14,
-          }}>Flavor Profile</div>
-          <div style={{
-            borderRadius: 14, border: '1px solid var(--rule)',
-            background: 'var(--paper-warm)',
-            padding: '18px 12px', display: 'flex', justifyContent: 'center',
-          }}>
-            <HexRadar flavors={item.flavors} />
           </div>
         </div>
       )}
