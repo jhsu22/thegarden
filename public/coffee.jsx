@@ -107,13 +107,9 @@ const CoffeeDetails = ({ item }) => {
 
   return (
     <div style={{ marginBottom: 28, display: 'flex', gap: 32, alignItems: 'center', flexWrap: 'wrap' }}>
-      {/* Profile circles — left, fixed width, vertically centred by alignItems:center above */}
+      {/* Profile circles — left */}
       {hasAttrs && (
         <div style={{ flex: '0 0 auto', minWidth: 160 }}>
-          <div style={{
-            fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.6,
-            textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 10,
-          }}>Profile</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {COFFEE_ATTRS.map(({ key, label }) => (
               <div key={key}>
@@ -134,13 +130,9 @@ const CoffeeDetails = ({ item }) => {
         </div>
       )}
 
-      {/* Flavor wheel — right, fills remaining space */}
+      {/* Flavor wheel — right, slightly wider than profile column */}
       {hasFlavors && (
-        <div style={{ flex: '1 1 200px' }}>
-          <div style={{
-            fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.6,
-            textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 10,
-          }}>Flavor Profile</div>
+        <div style={{ flex: '0 0 auto', width: 210 }}>
           <HexRadar flavors={item.flavors} />
         </div>
       )}
