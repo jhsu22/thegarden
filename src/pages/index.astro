@@ -1,0 +1,261 @@
+---
+// The Garden — personal life tracker
+// Shell page: fonts, CSS tokens, and script loading for the React SPA
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>The Garden — a quiet record</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..700,30..100,0..1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper: #fbf6f1;
+    --paper-warm: #f5ece2;
+    --paper-deep: #efe3d4;
+    --ink: #3d2c33;
+    --ink-soft: #8a7079;
+    --rule: #e8d9cf;
+    --accent-soft: #f9e3e6;
+    --accent: #f1c3c9;
+    --accent-strong: #d97a87;
+    --sage: #b6c2a3;
+    --sage-strong: #6f8758;
+    --butter: #ecd5a0;
+    --chip-rose-bg: #fae6e9;
+    --chip-rose-ink: #b8525e;
+    --chip-rose-border: #f0c8cd;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    --pad-main: 40px 56px 80px;
+    --max-main: 1180px;
+  }
+
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(217, 122, 135, 0.04) 0, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(182, 194, 163, 0.04) 0, transparent 40%);
+    pointer-events: none; z-index: 0;
+  }
+
+  * { box-sizing: border-box; }
+  button { font: inherit; }
+  input, textarea { font: inherit; color: var(--ink); }
+  input::placeholder, textarea::placeholder { color: var(--ink-soft); opacity: 0.7; }
+
+  input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; height: 18px; }
+  input[type=range]::-webkit-slider-runnable-track { height: 4px; background: var(--accent-soft); border-radius: 999px; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; margin-top: -6px;
+    background: var(--paper); border: 2px solid var(--accent-strong);
+    border-radius: 50%; cursor: pointer;
+    box-shadow: 0 2px 6px -1px rgba(217, 122, 135, 0.4);
+  }
+  input[type=range]::-moz-range-track { height: 4px; background: var(--accent-soft); border-radius: 999px; }
+  input[type=range]::-moz-range-thumb { width: 14px; height: 14px; background: var(--paper); border: 2px solid var(--accent-strong); border-radius: 50%; cursor: pointer; }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 999px; border: 2px solid var(--paper); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Mobile menu button — hidden on desktop */
+  .menu-btn {
+    display: none;
+    position: fixed; top: 14px; left: 14px; z-index: 60;
+    width: 42px; height: 42px; border-radius: 12px;
+    background: var(--paper); border: 1px solid var(--rule);
+    cursor: pointer; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px -4px rgba(60, 40, 50, 0.2);
+  }
+  .menu-btn span {
+    display: block; width: 18px; height: 1.6px; background: var(--ink);
+    position: relative;
+  }
+  .menu-btn span::before, .menu-btn span::after {
+    content: ''; position: absolute; left: 0; width: 18px; height: 1.6px; background: var(--ink);
+  }
+  .menu-btn span::before { top: -6px; }
+  .menu-btn span::after { top: 6px; }
+
+  .scrim {
+    display: none;
+    position: fixed; inset: 0; z-index: 40;
+    background: rgba(60, 40, 50, 0.4);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 200ms ease;
+  }
+
+  /* Mobile breakpoint */
+  @media (max-width: 880px) {
+    :root { --pad-main: 80px 18px 60px; }
+    .menu-btn { display: flex; }
+    .sidebar {
+      position: fixed !important;
+      top: 0; left: 0; bottom: 0;
+      transform: translateX(-100%);
+      transition: transform 220ms cubic-bezier(0.2, 0.9, 0.3, 1);
+      z-index: 50;
+      box-shadow: 0 0 40px -10px rgba(60, 40, 50, 0.3);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .scrim.open { display: block; }
+    .grid-stat { grid-template-columns: repeat(2, 1fr) !important; }
+    .grid-cats, .grid-tops { grid-template-columns: 1fr !important; }
+    .greeting-h1 { font-size: 36px !important; }
+    .browse-h1, .dash-h1 { font-size: 32px !important; }
+    .detail-modal { max-height: 92vh !important; }
+    .detail-header-row { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
+    .add-sheet { max-width: 100% !important; }
+    .toolbar-row { flex-wrap: wrap; }
+    .feed-row {
+      grid-template-columns: 56px 1fr auto !important;
+      gap: 12px !important;
+    }
+    .score-table-row {
+      grid-template-columns: 1.2fr 1fr 1fr 1fr !important;
+      padding: 10px 12px !important;
+    }
+    .pad-detail { padding: 22px !important; }
+  }
+
+  @media (max-width: 480px) {
+    .grid-stat { grid-template-columns: 1fr !important; }
+    .greeting-h1 { font-size: 30px !important; }
+    .browse-h1, .dash-h1 { font-size: 26px !important; }
+    .add-sheet-grid-2 { grid-template-columns: 1fr !important; }
+    .rater-grid { grid-template-columns: 1fr !important; }
+    .cat-grid-3 { grid-template-columns: 1fr 1fr !important; }
+  }
+</style>
+</head>
+
+<body>
+<div id="root" style="position: relative; z-index: 1;"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="/data.jsx"></script>
+<script type="text/babel" src="/components.jsx"></script>
+<script type="text/babel" src="/app.jsx"></script>
+<script type="text/babel" src="/dashboard.jsx"></script>
+<script type="text/babel" src="/new-bed.jsx"></script>
+
+<script type="text/babel">
+  const { useState, useEffect } = React;
+
+  const FIXED_WEIGHTS = {
+    josie: {
+      'café':       { ambiance: 0.50, taste: 0.30, originality: 0.20 },
+      'restaurant': { ambiance: 0.25, taste: 0.50, originality: 0.25 },
+    },
+    sammy: {
+      'café':       { ambiance: 0.30, taste: 0.35, originality: 0.35 },
+      'restaurant': { ambiance: 0.10, taste: 0.60, originality: 0.20 },
+    },
+  };
+
+  function App() {
+    const [view, setView] = useState({ name: 'home' });
+    const [detail, setDetail] = useState(null);
+    const [adding, setAdding] = useState(false);
+    const [editing, setEditing] = useState(null); // { cat, id }
+    const [addingBed, setAddingBed] = useState(false);
+    const [navOpen, setNavOpen] = useState(false);
+    const [bump, setBump] = useState(0);
+
+    const counts = Object.fromEntries(CATEGORIES.map((c) => [c.id, ALL_DATA[c.id].length]));
+
+    const openDetail = (cat, id) => {
+      if (id) setDetail({ cat, id });
+      else { setView({ name: 'browse', cat }); setNavOpen(false); }
+    };
+    const openAdd = (cat) => setAdding({ cat: cat || (view.cat) });
+
+    const handleEdit = (catId, id) => {
+      setDetail(null);
+      setEditing({ cat: catId, id });
+    };
+
+    const handleDelete = (catId, id) => {
+      deleteEntry(catId, id);
+      setDetail(null);
+      setBump((b) => b + 1);
+    };
+
+    const goView = (v) => { setView(v); setDetail(null); setNavOpen(false); };
+
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh' }} data-screen-label="App">
+        <button className="menu-btn" onClick={() => setNavOpen(true)} aria-label="Open menu">
+          <span></span>
+        </button>
+        <div className={`scrim ${navOpen ? 'open' : ''}`} onClick={() => setNavOpen(false)} />
+        <Sidebar view={view} setView={goView} counts={counts} navOpen={navOpen} onNewBed={() => setAddingBed(true)} />
+
+        <main style={{
+          flex: 1, padding: 'var(--pad-main)', maxWidth: 'var(--max-main)',
+          margin: '0 auto', width: '100%',
+        }} data-screen-label={view.name}>
+          {view.name === 'home' && <HomeView weights={FIXED_WEIGHTS} onOpen={openDetail} onAdd={openAdd} bump={bump} />}
+          {view.name === 'dashboard' && <DashboardView weights={FIXED_WEIGHTS} onOpen={openDetail} bump={bump} />}
+          {view.name === 'browse' && <BrowseView catId={view.cat} weights={FIXED_WEIGHTS} onOpen={openDetail} onAdd={openAdd} bump={bump} />}
+        </main>
+
+        {detail && (
+          <DetailView
+            catId={detail.cat} itemId={detail.id} weights={FIXED_WEIGHTS}
+            onClose={() => setDetail(null)}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        )}
+        {adding && <AddSheet initialCat={adding.cat} weights={FIXED_WEIGHTS} onClose={() => setAdding(false)} onSaved={() => setBump((b) => b + 1)} />}
+        {editing && (() => {
+          const item = ALL_DATA[editing.cat]?.find((i) => i.id === editing.id);
+          return item ? (
+            <AddSheet
+              editCatId={editing.cat} editItem={item} weights={FIXED_WEIGHTS}
+              onClose={() => setEditing(null)}
+              onSaved={() => setBump((b) => b + 1)}
+            />
+          ) : null;
+        })()}
+        {addingBed && <NewBedModal onClose={() => setAddingBed(false)} onCreated={(id) => { setBump((b) => b + 1); setView({ name: 'browse', cat: id }); }} />}
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
