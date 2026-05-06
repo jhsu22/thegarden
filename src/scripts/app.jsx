@@ -220,7 +220,7 @@ const HomeView = ({ weights, onOpen, onAdd, canEdit }) => {
   const today = new Date();
   const todayLabel = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-  const feed = useMemo(() => flatFeed(weights), [weights]);
+  const feed = useMemo(() => flatFeed(weights), [weights, bump]);
   const byMonth = useMemo(() => {
     const groups = {};
     for (const r of feed) {

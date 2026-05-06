@@ -115,8 +115,7 @@ const addEntry = async (catId, entry) => {
     method: 'POST',
     body: JSON.stringify({ ...entry, category: catId }),
   });
-  if (!ALL_DATA[catId]) ALL_DATA[catId] = [];
-  ALL_DATA[catId].unshift(entry);
+  ALL_DATA[catId] = [entry, ...(ALL_DATA[catId] || [])];
   return true;
 };
 
@@ -129,7 +128,7 @@ const updateEntry = async (catId, id, updates) => {
     method: 'POST',
     body: JSON.stringify({ ...updated, category: catId }),
   });
-  ALL_DATA[catId][idx] = updated;
+  ALL_DATA[catId] = ALL_DATA[catId].map((item, i) => i === idx ? updated : item);
   return true;
 };
 
@@ -139,8 +138,7 @@ const deleteEntry = async (catId, id) => {
     method: 'DELETE',
     body: JSON.stringify({ id }),
   });
-  const idx = ALL_DATA[catId].findIndex((i) => i.id === id);
-  if (idx >= 0) ALL_DATA[catId].splice(idx, 1);
+  ALL_DATA[catId] = (ALL_DATA[catId] || []).filter((i) => i.id !== id);
   return true;
 };
 
