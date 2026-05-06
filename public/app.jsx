@@ -588,32 +588,6 @@ const CookingDetails = ({ item }) => {
 
   return (
     <div style={{ marginBottom: 28 }}>
-      {/* Difficulty + time badges */}
-      {(diff || item.time) && (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-          {diff && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center',
-              padding: '5px 13px', borderRadius: 999,
-              background: diff.bg, color: diff.ink,
-              fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1.2,
-              textTransform: 'uppercase', border: '1px solid currentColor',
-            }}>{item.difficulty}</span>
-          )}
-          {item.time && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '5px 13px', borderRadius: 999,
-              background: 'var(--paper-warm)', color: 'var(--ink)',
-              fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1.2,
-              border: '1px solid var(--rule)',
-            }}>
-              <ClockIcon />{item.time}
-            </span>
-          )}
-        </div>
-      )}
-
       {/* Portions + scaling */}
       {item.portions != null && (
         <div style={{ marginBottom: 20 }}>
@@ -791,6 +765,38 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete }) => {
               }}>{item.notes}</p>
             </div>
           )}
+
+          {/* Cooking — difficulty + time above the rating */}
+          {catId === 'cooking' && (item.difficulty || item.time) && (() => {
+            const diff = item.difficulty ? DIFF_STYLE[item.difficulty] : null;
+            return (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+                {diff && (
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center',
+                    padding: '5px 13px', borderRadius: 999,
+                    background: diff.bg, color: diff.ink,
+                    fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1.2,
+                    textTransform: 'uppercase', border: '1px solid currentColor',
+                  }}>{item.difficulty}</span>
+                )}
+                {item.time && (
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '5px 13px', borderRadius: 999,
+                    background: 'var(--paper-warm)', color: 'var(--ink)',
+                    fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1.2,
+                    border: '1px solid var(--rule)',
+                  }}>
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+                      <circle cx="7" cy="7" r="6"/><path d="M7 4v3.5l2 1.5"/>
+                    </svg>
+                    {item.time}
+                  </span>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Scores */}
           {isCafe ? (
