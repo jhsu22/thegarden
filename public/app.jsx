@@ -501,6 +501,24 @@ const ItemCard = ({ item, catId, onOpen }) => {
             <div style={{
               fontFamily: 'var(--font-ui)', fontSize: 12.5, color: 'var(--ink-soft)',
             }}>{item.location || item.author || item.artist || ''}</div>
+            {catId === 'cooking' && (item.difficulty || item.time) && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+                {item.difficulty && DIFF_STYLE[item.difficulty] && (
+                  <span style={{
+                    display: 'inline-flex', padding: '2px 8px', borderRadius: 999,
+                    background: DIFF_STYLE[item.difficulty].bg, color: DIFF_STYLE[item.difficulty].ink,
+                    fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: 1,
+                    textTransform: 'uppercase', border: '1px solid currentColor',
+                  }}>{item.difficulty}</span>
+                )}
+                {item.time && (
+                  <span style={{
+                    fontFamily: 'var(--font-mono)', fontSize: 9.5, color: 'var(--ink-soft)',
+                    letterSpacing: 0.8,
+                  }}>⏱ {item.time}</span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -532,6 +550,153 @@ const ItemCard = ({ item, catId, onOpen }) => {
         </div>
       </div>
     </Card>
+  );
+};
+
+// ───────────────────────────────────────────────────────────────
+// Cooking-specific detail — ingredients with scaling, instructions
+// ───────────────────────────────────────────────────────────────
+const DIFF_STYLE = {
+  easy:   { bg: '#edf2e7', ink: '#4a6635' },
+  medium: { bg: '#f5ecd4', ink: '#8a6020' },
+  hard:   { bg: '#fae6e9', ink: '#9a3545' },
+};
+
+const fmtQty = (qty, scale) => {
+  if (qty == null || qty === '') return '';
+  const val = parseFloat(qty) * scale;
+  if (isNaN(val)) return String(qty);
+  const FRACS = [[0.125,'⅛'],[0.25,'¼'],[0.333,'⅓'],[0.5,'½'],[0.667,'⅔'],[0.75,'¾']];
+  const whole = Math.floor(val);
+  const frac = val - whole;
+  const f = FRACS.find(([n]) => Math.abs(frac - n) < 0.04);
+  if (f && whole === 0) return f[1];
+  if (f) return `${whole}${f[1]}`;
+  if (Math.abs(val - Math.round(val)) < 0.05) return String(Math.round(val));
+  return parseFloat(val.toFixed(1)).toString();
+};
+
+const CookingDetails = ({ item }) => {
+  const [target, setTarget] = useState(item.portions || 1);
+  const scale = (item.portions && item.portions > 0) ? target / item.portions : 1;
+  const diff = item.difficulty ? DIFF_STYLE[item.difficulty] : null;
+  const ClockIcon = () => (
+    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+      <circle cx="7" cy="7" r="6"/><path d="M7 4v3.5l2 1.5"/>
+    </svg>
+  );
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      {/* Difficulty + time badges */}
+      {(diff || item.time) && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+          {diff && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center',
+              padding: '5px 13px', borderRadius: 999,
+              background: diff.bg, color: diff.ink,
+              fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1.2,
+              textTransform: 'uppercase', border: '1px solid currentColor',
+            }}>{item.difficulty}</span>
+          )}
+          {item.time && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '5px 13px', borderRadius: 999,
+              background: 'var(--paper-warm)', color: 'var(--ink)',
+              fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1.2,
+              border: '1px solid var(--rule)',
+            }}>
+              <ClockIcon />{item.time}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Portions + scaling */}
+      {item.portions != null && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{
+            fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.6,
+            textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 10,
+          }}>Portions</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, color: 'var(--ink)' }}>serves</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button onClick={() => setTarget(Math.max(1, target - 1))} style={{
+                width: 28, height: 28, borderRadius: 999, border: '1px solid var(--rule)',
+                background: 'var(--paper)', cursor: 'pointer', fontSize: 18, lineHeight: 1,
+                color: 'var(--ink-soft)', display: 'grid', placeItems: 'center',
+              }}>−</button>
+              <span style={{
+                fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500,
+                color: 'var(--ink)', minWidth: 28, textAlign: 'center',
+                fontVariantNumeric: 'tabular-nums',
+              }}>{target}</span>
+              <button onClick={() => setTarget(target + 1)} style={{
+                width: 28, height: 28, borderRadius: 999, border: '1px solid var(--rule)',
+                background: 'var(--paper)', cursor: 'pointer', fontSize: 18, lineHeight: 1,
+                color: 'var(--ink-soft)', display: 'grid', placeItems: 'center',
+              }}>+</button>
+            </div>
+            {target !== item.portions && (
+              <span style={{
+                fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-strong)',
+                letterSpacing: 1, textTransform: 'uppercase',
+              }}>scaled from {item.portions}</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Ingredients */}
+      {item.ingredients?.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{
+            fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.6,
+            textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 10,
+          }}>Ingredients</div>
+          <div style={{ borderRadius: 12, border: '1px solid var(--rule)', overflow: 'hidden' }}>
+            {item.ingredients.map((ing, i) => (
+              <div key={i} style={{
+                display: 'grid', gridTemplateColumns: '64px 68px 1fr',
+                gap: 8, padding: '10px 16px', alignItems: 'baseline',
+                borderBottom: i < item.ingredients.length - 1 ? '1px solid var(--rule)' : 'none',
+                background: i % 2 === 0 ? 'var(--paper)' : 'var(--paper-warm)',
+              }}>
+                <span style={{
+                  fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 500,
+                  color: scale !== 1 ? 'var(--accent-strong)' : 'var(--ink)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}>{fmtQty(ing.qty, scale)}</span>
+                <span style={{
+                  fontFamily: 'var(--font-mono)', fontSize: 11,
+                  color: 'var(--ink-soft)', letterSpacing: 0.4,
+                }}>{ing.unit}</span>
+                <span style={{
+                  fontFamily: 'var(--font-ui)', fontSize: 14, color: 'var(--ink)',
+                }}>{ing.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Instructions */}
+      {item.instructions && (
+        <div>
+          <div style={{
+            fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.6,
+            textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 10,
+          }}>Instructions</div>
+          <p style={{
+            fontFamily: 'var(--font-display)', fontSize: 15.5, color: 'var(--ink)',
+            margin: 0, lineHeight: 1.75, whiteSpace: 'pre-line',
+          }}>{item.instructions}</p>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -626,6 +791,9 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete }) => {
               }}>{item.notes}</p>
             </div>
           )}
+
+          {/* Cooking details — ingredients, scaling, instructions */}
+          {catId === 'cooking' && <CookingDetails item={item} />}
 
           {/* Scores */}
           {isCafe ? (
@@ -820,6 +988,23 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
     if (editItem) loadPhoto(editItem.id).then((url) => { if (url) setPhotoPreview(url); });
   }, [editItem?.id]);
 
+  // Cooking-specific fields (always defined to satisfy hooks rules)
+  const isCooking = cat === 'cooking';
+  const [difficulty, setDifficulty] = useState(editItem?.difficulty || '');
+  const [cookTime, setCookTime] = useState(editItem?.time || '');
+  const [portions, setPortions] = useState(editItem?.portions != null ? String(editItem.portions) : '');
+  const [ingredients, setIngredients] = useState(
+    editItem?.ingredients?.length > 0
+      ? editItem.ingredients.map((ing) => ({ qty: ing.qty != null ? String(ing.qty) : '', unit: ing.unit || '', name: ing.name || '' }))
+      : [{ qty: '', unit: '', name: '' }]
+  );
+  const [cookInstructions, setCookInstructions] = useState(editItem?.instructions || '');
+
+  const updateIngredient = (idx, key, val) =>
+    setIngredients(ingredients.map((ing, i) => i === idx ? { ...ing, [key]: val } : ing));
+  const removeIngredient = (idx) =>
+    setIngredients(ingredients.filter((_, i) => i !== idx));
+
   const isCafe = ratingMode === 'cafe';
   const wJ = personWeights(weights, 'josie', kind);
   const wS = personWeights(weights, 'sammy', kind);
@@ -842,6 +1027,16 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
       fields.sammy = withSammy ? { ...sammy } : null;
     } else {
       fields.score = +score.toFixed(1);
+    }
+    if (isCooking) {
+      const filteredIngredients = ingredients
+        .filter((ing) => ing.name.trim())
+        .map((ing) => ({ qty: ing.qty !== '' ? parseFloat(ing.qty) : undefined, unit: ing.unit.trim(), name: ing.name.trim() }));
+      if (filteredIngredients.length > 0) fields.ingredients = filteredIngredients;
+      if (portions !== '') fields.portions = parseInt(portions, 10);
+      if (cookInstructions.trim()) fields.instructions = cookInstructions.trim();
+      if (difficulty) fields.difficulty = difficulty;
+      if (cookTime.trim()) fields.time = cookTime.trim();
     }
     if (isEdit) {
       updateEntry(editCatId, editItem.id, fields);
@@ -980,6 +1175,105 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
               } />
             </Field>
           )}
+
+          {/* Cooking-specific fields */}
+          {isCooking && (<>
+            <Field label="Difficulty">
+              <div style={{ display: 'flex', gap: 8 }}>
+                {['easy', 'medium', 'hard'].map((d) => {
+                  const ds = DIFF_STYLE[d];
+                  const active = difficulty === d;
+                  return (
+                    <button key={d} onClick={() => setDifficulty(active ? '' : d)} style={{
+                      flex: 1, padding: '9px 0', borderRadius: 10, cursor: 'pointer',
+                      border: `1px solid ${active ? ds.ink : 'var(--rule)'}`,
+                      background: active ? ds.bg : 'var(--paper)',
+                      color: active ? ds.ink : 'var(--ink-soft)',
+                      fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1,
+                      textTransform: 'uppercase',
+                    }}>{d}</button>
+                  );
+                })}
+              </div>
+            </Field>
+
+            <div className="add-sheet-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Total time">
+                <Input value={cookTime} onChange={setCookTime} placeholder="e.g. 45 min, 1h 30m" />
+              </Field>
+              <Field label="Serves">
+                <Input value={portions} onChange={setPortions} placeholder="e.g. 4" type="number" />
+              </Field>
+            </div>
+
+            <div>
+              <FieldLabel>Ingredients</FieldLabel>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
+                {ingredients.map((ing, i) => (
+                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '68px 78px 1fr auto', gap: 6, alignItems: 'center' }}>
+                    <input
+                      value={ing.qty} onChange={(e) => updateIngredient(i, 'qty', e.target.value)}
+                      placeholder="qty" type="number" step="any" min="0"
+                      style={{
+                        padding: '8px 10px', borderRadius: 10, border: '1px solid var(--rule)',
+                        background: 'var(--paper)', fontFamily: 'var(--font-ui)', fontSize: 13.5,
+                        color: 'var(--ink)', outline: 'none', width: '100%',
+                      }}
+                    />
+                    <input
+                      value={ing.unit} onChange={(e) => updateIngredient(i, 'unit', e.target.value)}
+                      placeholder="unit"
+                      style={{
+                        padding: '8px 10px', borderRadius: 10, border: '1px solid var(--rule)',
+                        background: 'var(--paper)', fontFamily: 'var(--font-ui)', fontSize: 13.5,
+                        color: 'var(--ink)', outline: 'none', width: '100%',
+                      }}
+                    />
+                    <input
+                      value={ing.name} onChange={(e) => updateIngredient(i, 'name', e.target.value)}
+                      placeholder="ingredient"
+                      style={{
+                        padding: '8px 10px', borderRadius: 10, border: '1px solid var(--rule)',
+                        background: 'var(--paper)', fontFamily: 'var(--font-ui)', fontSize: 13.5,
+                        color: 'var(--ink)', outline: 'none', width: '100%',
+                      }}
+                    />
+                    {ingredients.length > 1 ? (
+                      <button onClick={() => removeIngredient(i)} style={{
+                        width: 28, height: 28, borderRadius: 999, border: '1px solid var(--rule)',
+                        background: 'var(--paper)', cursor: 'pointer', fontSize: 16,
+                        color: 'var(--ink-soft)', display: 'grid', placeItems: 'center', flexShrink: 0,
+                      }}>×</button>
+                    ) : <div style={{ width: 28 }} />}
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setIngredients([...ingredients, { qty: '', unit: '', name: '' }])}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  background: 'none', border: '1px dashed var(--rule)', borderRadius: 10,
+                  padding: '8px 14px', cursor: 'pointer', width: '100%', justifyContent: 'center',
+                  fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1,
+                  textTransform: 'uppercase', color: 'var(--ink-soft)',
+                }}
+              >+ add ingredient</button>
+            </div>
+
+            <Field label="Instructions">
+              <textarea
+                value={cookInstructions} onChange={(e) => setCookInstructions(e.target.value)}
+                placeholder="Step by step — one paragraph per step works well…"
+                rows={6}
+                style={{
+                  width: '100%', padding: 12, borderRadius: 10,
+                  border: '1px solid var(--rule)', background: 'var(--paper)',
+                  fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--ink)',
+                  resize: 'vertical', outline: 'none',
+                }}
+              />
+            </Field>
+          </>)}
 
           {/* Score area */}
           {isCafe ? (

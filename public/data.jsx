@@ -104,6 +104,26 @@ const COOKING = [
     photo: { tone: 'butter', shape: 'rounded' },
     score: 9.2,
     tags: ['bread', 'sourdough'],
+    difficulty: 'medium', time: '3h + 36h ferment', portions: 12,
+    ingredients: [
+      { qty: 500, unit: 'g',    name: 'bread flour' },
+      { qty: 375, unit: 'ml',   name: 'water (lukewarm)' },
+      { qty: 100, unit: 'g',    name: 'active sourdough starter' },
+      { qty: 10,  unit: 'g',    name: 'fine salt' },
+      { qty: 4,   unit: 'tbsp', name: 'olive oil' },
+      { qty: 1,   unit: 'tbsp', name: 'flaky sea salt' },
+    ],
+    instructions: `Mix flour, water, and starter until no dry flour remains. Rest 30 min.
+
+Add salt and fold the dough over itself 4 times. Repeat every 30 min for 2 hours (4 sets).
+
+Transfer to an oiled container and cold ferment in the fridge for 36 hours.
+
+Stretch into an oiled 9×13 pan. Proof at room temp 2 hours until puffy.
+
+Dimple aggressively with wet fingers. Drizzle with olive oil, flaky salt, and rosemary.
+
+Bake at 230°C for 22–25 min until deep golden. Cool on a rack.`,
   },
   {
     id: 'k2', name: 'Miso-glazed Eggplant', kind: 'cooked',
@@ -112,6 +132,26 @@ const COOKING = [
     photo: { tone: 'plum', shape: 'arch' },
     score: 7.8,
     tags: ['weeknight', 'japanese'],
+    difficulty: 'easy', time: '25 min', portions: 2,
+    ingredients: [
+      { qty: 2, unit: '',     name: 'Japanese eggplants' },
+      { qty: 2, unit: 'tbsp', name: 'white miso' },
+      { qty: 1, unit: 'tbsp', name: 'mirin' },
+      { qty: 1, unit: 'tbsp', name: 'sake' },
+      { qty: 1, unit: 'tsp',  name: 'sesame oil' },
+      { qty: 1, unit: 'tsp',  name: 'sugar' },
+      { qty: 2, unit: '',     name: 'scallions, sliced' },
+      { qty: 1, unit: 'tsp',  name: 'sesame seeds' },
+    ],
+    instructions: `Halve eggplants lengthwise and score the flesh in a crosshatch. Brush with oil.
+
+Mix miso, mirin, sake, sesame oil, and sugar until smooth.
+
+Broil eggplants cut-side down 5 min, then flip. Spoon glaze over the cut side.
+
+Broil 4–5 min more until the glaze is caramelised and flesh is tender.
+
+Top with scallions and sesame seeds.`,
   },
   {
     id: 'k3', name: 'Strawberry Galette', kind: 'baked',
@@ -120,6 +160,27 @@ const COOKING = [
     photo: { tone: 'rose', shape: 'circle' },
     score: 9.0,
     tags: ['dessert', 'summer'],
+    difficulty: 'medium', time: '1h 15m', portions: 6,
+    ingredients: [
+      { qty: 200, unit: 'g',    name: 'pâte brisée (cold)' },
+      { qty: 400, unit: 'g',    name: 'strawberries, hulled and halved' },
+      { qty: 3,   unit: 'tbsp', name: 'sugar' },
+      { qty: 6,   unit: '',     name: 'fresh basil leaves' },
+      { qty: 1,   unit: 'tbsp', name: 'cornstarch' },
+      { qty: 1,   unit: '',     name: 'egg (for egg wash)' },
+      { qty: 1,   unit: 'tbsp', name: 'turbinado sugar' },
+    ],
+    instructions: `Toss strawberries with 2 tbsp sugar, cornstarch, and torn basil. Macerate 15 min.
+
+Roll dough on parchment into a rough 12-inch circle, about 3mm thick.
+
+Pile filling in the centre leaving a 5cm border. Fold border up and pleat as you go.
+
+Brush crust with egg wash and sprinkle turbinado sugar over everything.
+
+Bake at 200°C for 40–45 min until crust is deep golden and filling is bubbling.
+
+Rest 10 min before slicing.`,
   },
   {
     id: 'k4', name: 'Cacio e Pepe', kind: 'cooked',
@@ -128,6 +189,24 @@ const COOKING = [
     photo: { tone: 'sage', shape: 'rounded' },
     score: 7.0,
     tags: ['pasta', 'classic'],
+    difficulty: 'hard', time: '20 min', portions: 2,
+    ingredients: [
+      { qty: 200, unit: 'g',   name: 'tonnarelli or spaghetti' },
+      { qty: 80,  unit: 'g',   name: 'Pecorino Romano, finely grated' },
+      { qty: 30,  unit: 'g',   name: 'Parmigiano Reggiano, finely grated' },
+      { qty: 2,   unit: 'tsp', name: 'whole black peppercorns' },
+    ],
+    instructions: `Toast peppercorns in a wide pan over medium heat until fragrant, 2 min. Crush coarsely.
+
+Cook pasta in salted boiling water until 2 min before al dente. Reserve 200ml pasta water.
+
+Add a splash of pasta water to the pepper pan. Reduce heat to low. Add pasta and toss.
+
+Add pasta water a little at a time, tossing constantly to build a glossy sauce.
+
+Off heat, add half the cheese and toss vigorously. Add remaining cheese and water as needed.
+
+Serve immediately with extra Pecorino and cracked pepper.`,
   },
 ];
 
