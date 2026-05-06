@@ -1045,7 +1045,7 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
 
   const TONES = ['rose', 'sage', 'butter', 'plum', 'sky', 'clay'];
   const SHAPES = ['rounded', 'circle', 'arch'];
-  const submit = () => {
+  const submit = async () => {
     const fields = {
       name: name || 'Untitled', date,
       notes: notes || '', tags: tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
@@ -1076,14 +1076,14 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
       if (cookTime.trim()) fields.time = cookTime.trim();
     }
     if (isEdit) {
-      updateEntry(editCatId, editItem.id, fields);
+      await updateEntry(editCatId, editItem.id, fields);
       if (photoData) savePhoto(editItem.id, photoData);
       if (onSaved) onSaved(editCatId);
     } else {
       const id = `u${Date.now().toString(36)}`;
       const tone = TONES[Math.floor(Math.random() * TONES.length)];
       const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
-      addEntry(cat, { ...fields, id, photo: { tone, shape } });
+      await addEntry(cat, { ...fields, id, photo: { tone, shape } });
       if (photoData) savePhoto(id, photoData);
       if (onSaved) onSaved(cat);
     }

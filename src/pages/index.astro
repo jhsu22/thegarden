@@ -1,6 +1,11 @@
 ---
-// The Garden — personal life tracker
-// Shell page: fonts, CSS tokens, and script loading for the React SPA
+import componentsRaw from '../scripts/components.jsx?raw';
+import photosRaw     from '../scripts/photos.jsx?raw';
+import coffeeRaw     from '../scripts/coffee.jsx?raw';
+import dataRaw       from '../scripts/data.jsx?raw';
+import appRaw        from '../scripts/app.jsx?raw';
+import dashboardRaw  from '../scripts/dashboard.jsx?raw';
+import newBedRaw     from '../scripts/new-bed.jsx?raw';
 ---
 
 <!doctype html>
@@ -86,7 +91,6 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  /* Mobile menu button — hidden on desktop */
   .menu-btn {
     display: none;
     position: fixed; top: 14px; left: 14px; z-index: 60;
@@ -113,7 +117,6 @@
     animation: fadeIn 200ms ease;
   }
 
-  /* Mobile breakpoint */
   @media (max-width: 880px) {
     :root { --pad-main: 80px 18px 60px; }
     .menu-btn { display: flex; }
@@ -164,52 +167,72 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-<script type="text/babel" src="/data.jsx"></script>
-<script type="text/babel" src="/components.jsx"></script>
-<script type="text/babel" src="/photos.jsx"></script>
-<script type="text/babel" src="/coffee.jsx"></script>
-<script type="text/babel" src="/app.jsx"></script>
-<script type="text/babel" src="/dashboard.jsx"></script>
-<script type="text/babel" src="/new-bed.jsx"></script>
+<Fragment set:html={`<script type="text/babel">${componentsRaw}</script>`} />
+<Fragment set:html={`<script type="text/babel">${photosRaw}</script>`} />
+<Fragment set:html={`<script type="text/babel">${coffeeRaw}</script>`} />
+<Fragment set:html={`<script type="text/babel">${dataRaw}</script>`} />
+<Fragment set:html={`<script type="text/babel">${appRaw}</script>`} />
+<Fragment set:html={`<script type="text/babel">${dashboardRaw}</script>`} />
+<Fragment set:html={`<script type="text/babel">${newBedRaw}</script>`} />
 
 <script type="text/babel">
   const { useState, useEffect } = React;
 
-  const FIXED_WEIGHTS = {
-    josie: {
-      'café':       { ambiance: 0.50, taste: 0.30, originality: 0.20 },
-      'restaurant': { ambiance: 0.25, taste: 0.50, originality: 0.25 },
-    },
-    sammy: {
-      'café':       { ambiance: 0.30, taste: 0.35, originality: 0.35 },
-      'restaurant': { ambiance: 0.10, taste: 0.60, originality: 0.20 },
-    },
-  };
+  const LoadingScreen = () => (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      height: '100vh', background: 'var(--paper)',
+    }}>
+      <div style={{ textAlign: 'center' }}>
+        <PetalMark size={36} color="var(--accent-strong)" />
+        <div style={{
+          fontFamily: 'var(--font-display)', fontSize: 16, fontStyle: 'italic',
+          color: 'var(--ink-soft)', marginTop: 14,
+        }}>growing…</div>
+      </div>
+    </div>
+  );
 
   function App() {
-    const [view, setView] = useState({ name: 'home' });
-    const [detail, setDetail] = useState(null);
-    const [adding, setAdding] = useState(false);
-    const [editing, setEditing] = useState(null); // { cat, id }
+    const [loading, setLoading]   = useState(true);
+    const [weights, setWeights]   = useState(DEFAULT_WEIGHTS);
+    const [view, setView]         = useState({ name: 'home' });
+    const [detail, setDetail]     = useState(null);
+    const [adding, setAdding]     = useState(false);
+    const [editing, setEditing]   = useState(null);
     const [addingBed, setAddingBed] = useState(false);
-    const [navOpen, setNavOpen] = useState(false);
-    const [bump, setBump] = useState(0);
+    const [navOpen, setNavOpen]   = useState(false);
+    const [bump, setBump]         = useState(0);
 
-    const counts = Object.fromEntries(CATEGORIES.map((c) => [c.id, ALL_DATA[c.id].length]));
+    useEffect(() => {
+      Promise.all([
+        hydrate(),
+        fetch('/api/settings')
+          .then((r) => r.ok ? r.json() : null)
+          .then((w) => { if (w) setWeights(w); })
+          .catch(() => {}),
+      ]).then(() => setLoading(false));
+    }, []);
+
+    if (loading) return <LoadingScreen />;
+
+    const counts = Object.fromEntries(
+      CATEGORIES.map((c) => [c.id, (ALL_DATA[c.id] || []).length])
+    );
 
     const openDetail = (cat, id) => {
       if (id) setDetail({ cat, id });
       else { setView({ name: 'browse', cat }); setNavOpen(false); }
     };
-    const openAdd = (cat) => setAdding({ cat: cat || (view.cat) });
+    const openAdd = (cat) => setAdding({ cat: cat || view.cat });
 
     const handleEdit = (catId, id) => {
       setDetail(null);
       setEditing({ cat: catId, id });
     };
 
-    const handleDelete = (catId, id) => {
-      deleteEntry(catId, id);
+    const handleDelete = async (catId, id) => {
+      await deleteEntry(catId, id);
       deletePhoto(id);
       setDetail(null);
       setBump((b) => b + 1);
@@ -229,31 +252,42 @@
           flex: 1, padding: 'var(--pad-main)', maxWidth: 'var(--max-main)',
           margin: '0 auto', width: '100%',
         }} data-screen-label={view.name}>
-          {view.name === 'home' && <HomeView weights={FIXED_WEIGHTS} onOpen={openDetail} onAdd={openAdd} bump={bump} />}
-          {view.name === 'dashboard' && <DashboardView weights={FIXED_WEIGHTS} onOpen={openDetail} bump={bump} />}
-          {view.name === 'browse' && <BrowseView catId={view.cat} weights={FIXED_WEIGHTS} onOpen={openDetail} onAdd={openAdd} bump={bump} />}
+          {view.name === 'home'      && <HomeView      weights={weights} onOpen={openDetail} onAdd={openAdd} bump={bump} />}
+          {view.name === 'dashboard' && <DashboardView weights={weights} onOpen={openDetail} bump={bump} />}
+          {view.name === 'browse'    && <BrowseView    catId={view.cat} weights={weights} onOpen={openDetail} onAdd={openAdd} bump={bump} />}
         </main>
 
         {detail && (
           <DetailView
-            catId={detail.cat} itemId={detail.id} weights={FIXED_WEIGHTS}
+            catId={detail.cat} itemId={detail.id} weights={weights}
             onClose={() => setDetail(null)}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />
         )}
-        {adding && <AddSheet initialCat={adding.cat} weights={FIXED_WEIGHTS} onClose={() => setAdding(false)} onSaved={() => setBump((b) => b + 1)} />}
+        {adding && (
+          <AddSheet
+            initialCat={adding.cat} weights={weights}
+            onClose={() => setAdding(false)}
+            onSaved={() => setBump((b) => b + 1)}
+          />
+        )}
         {editing && (() => {
-          const item = ALL_DATA[editing.cat]?.find((i) => i.id === editing.id);
+          const item = (ALL_DATA[editing.cat] || []).find((i) => i.id === editing.id);
           return item ? (
             <AddSheet
-              editCatId={editing.cat} editItem={item} weights={FIXED_WEIGHTS}
+              editCatId={editing.cat} editItem={item} weights={weights}
               onClose={() => setEditing(null)}
               onSaved={() => setBump((b) => b + 1)}
             />
           ) : null;
         })()}
-        {addingBed && <NewBedModal onClose={() => setAddingBed(false)} onCreated={(id) => { setBump((b) => b + 1); setView({ name: 'browse', cat: id }); }} />}
+        {addingBed && (
+          <NewBedModal
+            onClose={() => setAddingBed(false)}
+            onCreated={(id) => { setBump((b) => b + 1); setView({ name: 'browse', cat: id }); }}
+          />
+        )}
       </div>
     );
   }
