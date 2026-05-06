@@ -4,6 +4,7 @@
 interface Env {
   DB: D1Database;
   SETTINGS: KVNamespace;
+  PHOTOS: R2Bucket;
 }
 
 type Runtime = import('@astrojs/cloudflare').Runtime<Env>;

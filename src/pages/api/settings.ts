@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { requireAuth } from '../../lib/auth';
 
 const FALLBACK_WEIGHTS = {
   josie: {
@@ -20,6 +21,9 @@ export const GET: APIRoute = async ({ locals }) => {
 };
 
 export const PUT: APIRoute = async ({ request, locals }) => {
+  const guard = requireAuth(request);
+  if (guard) return guard;
+
   const { SETTINGS } = locals.runtime.env;
   const body = await request.json();
   await SETTINGS.put('DEFAULT_WEIGHTS', JSON.stringify(body));

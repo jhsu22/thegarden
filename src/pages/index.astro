@@ -6,6 +6,14 @@ import dataRaw       from '../scripts/data.jsx?raw';
 import appRaw        from '../scripts/app.jsx?raw';
 import dashboardRaw  from '../scripts/dashboard.jsx?raw';
 import newBedRaw     from '../scripts/new-bed.jsx?raw';
+
+const isProd = import.meta.env.PROD;
+const reactSrc    = isProd
+  ? 'https://unpkg.com/react@18.3.1/umd/react.production.min.js'
+  : 'https://unpkg.com/react@18.3.1/umd/react.development.js';
+const reactDomSrc = isProd
+  ? 'https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js'
+  : 'https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js';
 ---
 
 <!doctype html>
@@ -163,9 +171,9 @@ import newBedRaw     from '../scripts/new-bed.jsx?raw';
 <body>
 <div id="root" style="position: relative; z-index: 1;"></div>
 
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src={reactSrc} crossorigin="anonymous"></script>
+<script src={reactDomSrc} crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
 
 <Fragment set:html={`<script type="text/babel">${componentsRaw}</script>`} />
 <Fragment set:html={`<script type="text/babel">${photosRaw}</script>`} />
@@ -194,15 +202,16 @@ import newBedRaw     from '../scripts/new-bed.jsx?raw';
   );
 
   function App() {
-    const [loading, setLoading]   = useState(true);
-    const [weights, setWeights]   = useState(DEFAULT_WEIGHTS);
-    const [view, setView]         = useState({ name: 'home' });
-    const [detail, setDetail]     = useState(null);
-    const [adding, setAdding]     = useState(false);
-    const [editing, setEditing]   = useState(null);
-    const [addingBed, setAddingBed] = useState(false);
-    const [navOpen, setNavOpen]   = useState(false);
-    const [bump, setBump]         = useState(0);
+    const [loading, setLoading]       = useState(true);
+    const [canEdit, setCanEdit]       = useState(false);
+    const [weights, setWeights]       = useState(DEFAULT_WEIGHTS);
+    const [view, setView]             = useState({ name: 'home' });
+    const [detail, setDetail]         = useState(null);
+    const [adding, setAdding]         = useState(false);
+    const [editing, setEditing]       = useState(null);
+    const [addingBed, setAddingBed]   = useState(false);
+    const [navOpen, setNavOpen]       = useState(false);
+    const [bump, setBump]             = useState(0);
 
     useEffect(() => {
       Promise.all([
@@ -210,6 +219,10 @@ import newBedRaw     from '../scripts/new-bed.jsx?raw';
         fetch('/api/settings')
           .then((r) => r.ok ? r.json() : null)
           .then((w) => { if (w) setWeights(w); })
+          .catch(() => {}),
+        fetch('/api/auth/me')
+          .then((r) => r.ok ? r.json() : null)
+          .then((a) => { if (a?.authenticated) setCanEdit(true); })
           .catch(() => {}),
       ]).then(() => setLoading(false));
     }, []);
@@ -246,15 +259,15 @@ import newBedRaw     from '../scripts/new-bed.jsx?raw';
           <span></span>
         </button>
         <div className={`scrim ${navOpen ? 'open' : ''}`} onClick={() => setNavOpen(false)} />
-        <Sidebar view={view} setView={goView} counts={counts} navOpen={navOpen} onNewBed={() => setAddingBed(true)} />
+        <Sidebar view={view} setView={goView} counts={counts} navOpen={navOpen} onNewBed={() => setAddingBed(true)} canEdit={canEdit} />
 
         <main style={{
           flex: 1, padding: 'var(--pad-main)', maxWidth: 'var(--max-main)',
           margin: '0 auto', width: '100%',
         }} data-screen-label={view.name}>
-          {view.name === 'home'      && <HomeView      weights={weights} onOpen={openDetail} onAdd={openAdd} bump={bump} />}
+          {view.name === 'home'      && <HomeView      weights={weights} onOpen={openDetail} onAdd={openAdd} bump={bump} canEdit={canEdit} />}
           {view.name === 'dashboard' && <DashboardView weights={weights} onOpen={openDetail} bump={bump} />}
-          {view.name === 'browse'    && <BrowseView    catId={view.cat} weights={weights} onOpen={openDetail} onAdd={openAdd} bump={bump} />}
+          {view.name === 'browse'    && <BrowseView    catId={view.cat} weights={weights} onOpen={openDetail} onAdd={openAdd} bump={bump} canEdit={canEdit} />}
         </main>
 
         {detail && (
@@ -263,16 +276,17 @@ import newBedRaw     from '../scripts/new-bed.jsx?raw';
             onClose={() => setDetail(null)}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            canEdit={canEdit}
           />
         )}
-        {adding && (
+        {canEdit && adding && (
           <AddSheet
             initialCat={adding.cat} weights={weights}
             onClose={() => setAdding(false)}
             onSaved={() => setBump((b) => b + 1)}
           />
         )}
-        {editing && (() => {
+        {canEdit && editing && (() => {
           const item = (ALL_DATA[editing.cat] || []).find((i) => i.id === editing.id);
           return item ? (
             <AddSheet
@@ -282,7 +296,7 @@ import newBedRaw     from '../scripts/new-bed.jsx?raw';
             />
           ) : null;
         })()}
-        {addingBed && (
+        {canEdit && addingBed && (
           <NewBedModal
             onClose={() => setAddingBed(false)}
             onCreated={(id) => { setBump((b) => b + 1); setView({ name: 'browse', cat: id }); }}

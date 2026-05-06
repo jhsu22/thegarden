@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { requireAuth } from '../../lib/auth';
 
 interface EntryBody {
   id: string;
@@ -39,6 +40,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
 };
 
 export const POST: APIRoute = async ({ request, locals }) => {
+  const guard = requireAuth(request);
+  if (guard) return guard;
+
   const { DB } = locals.runtime.env;
   const body = (await request.json()) as EntryBody;
   const { id, category, name, date, notes = null, score = null, ...metadata } = body;
@@ -60,6 +64,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 };
 
 export const DELETE: APIRoute = async ({ request, locals }) => {
+  const guard = requireAuth(request);
+  if (guard) return guard;
+
   const { DB } = locals.runtime.env;
   const { id } = (await request.json()) as { id: string };
 

@@ -19,7 +19,7 @@ const getSeason = (month) => {
   return 'winter';
 };
 
-const Sidebar = ({ view, setView, counts, navOpen, onNewBed }) => {
+const Sidebar = ({ view, setView, counts, navOpen, onNewBed, canEdit }) => {
   const now = new Date();
   const season = getSeason(now.getMonth());
   const thisMonthEntries = Object.values(ALL_DATA).flat().filter((i) => {
@@ -109,17 +109,19 @@ const Sidebar = ({ view, setView, counts, navOpen, onNewBed }) => {
               onClick={() => setView({ name: 'browse', cat: c.id })}
             />
           ))}
-          <button onClick={onNewBed} style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: '10px 14px', borderRadius: 12, marginTop: 4,
-            background: 'transparent', border: '1px dashed var(--rule)',
-            color: 'var(--ink-soft)', cursor: 'pointer',
-            fontFamily: 'var(--font-ui)', fontSize: 13,
-            textAlign: 'left', width: '100%',
-          }}>
-            <span style={{ display: 'inline-flex', width: 22, justifyContent: 'center', fontSize: 16, color: 'var(--accent-strong)' }}>+</span>
-            <span>new bed</span>
-          </button>
+          {canEdit && (
+            <button onClick={onNewBed} style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '10px 14px', borderRadius: 12, marginTop: 4,
+              background: 'transparent', border: '1px dashed var(--rule)',
+              color: 'var(--ink-soft)', cursor: 'pointer',
+              fontFamily: 'var(--font-ui)', fontSize: 13,
+              textAlign: 'left', width: '100%',
+            }}>
+              <span style={{ display: 'inline-flex', width: 22, justifyContent: 'center', fontSize: 16, color: 'var(--accent-strong)' }}>+</span>
+              <span>new bed</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -214,7 +216,7 @@ const FeedRow = ({ row, onOpen, weights }) => {
   );
 };
 
-const HomeView = ({ weights, onOpen, onAdd }) => {
+const HomeView = ({ weights, onOpen, onAdd, canEdit }) => {
   const today = new Date();
   const todayLabel = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
@@ -278,7 +280,7 @@ const HomeView = ({ weights, onOpen, onAdd }) => {
       <SectionTitle
         eyebrow="The beds"
         title="What's growing"
-        action={<Button variant="ghost" onClick={() => onAdd()}>＋ new entry</Button>}
+        action={canEdit ? <Button variant="ghost" onClick={() => onAdd()}>＋ new entry</Button> : null}
       />
       <div className="grid-cats" style={{
         display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 44,
@@ -374,7 +376,7 @@ const HomeView = ({ weights, onOpen, onAdd }) => {
 // ───────────────────────────────────────────────────────────────
 // Browse — filter / grid for one category
 // ───────────────────────────────────────────────────────────────
-const BrowseView = ({ catId, weights, onOpen, onAdd }) => {
+const BrowseView = ({ catId, weights, onOpen, onAdd, canEdit }) => {
   const cat = CATEGORIES.find((c) => c.id === catId);
   const items = ALL_DATA[catId];
   const [sort, setSort] = useState('recent');
@@ -448,7 +450,7 @@ const BrowseView = ({ catId, weights, onOpen, onAdd }) => {
             >{s}</button>
           ))}
         </div>
-        <Button onClick={() => onAdd(catId)}>＋ add</Button>
+        {canEdit && <Button onClick={() => onAdd(catId)}>＋ add</Button>}
       </div>
 
       {/* Grid */}
@@ -677,7 +679,7 @@ const CookingDetails = ({ item }) => {
 // ───────────────────────────────────────────────────────────────
 // Detail view (modal)
 // ───────────────────────────────────────────────────────────────
-const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete }) => {
+const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete, canEdit }) => {
   const item = ALL_DATA[catId].find((i) => i.id === itemId);
   if (!item) return null;
   const cat = CATEGORIES.find((c) => c.id === catId);
@@ -837,8 +839,8 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete }) => {
           )}
         </div>
 
-        {/* Footer — edit / delete */}
-        <div style={{
+        {/* Footer — edit / delete (authenticated only) */}
+        {canEdit && <div style={{
           padding: '16px 32px',
           borderTop: '1px solid var(--rule)',
           background: 'var(--paper-warm)',
@@ -878,7 +880,7 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete }) => {
               >edit entry</Button>
             </>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   );
@@ -1162,12 +1164,12 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <PhotoUpload
                 preview={photoPreview}
-                onChange={(dataUrl) => { setPhotoData(dataUrl); setPhotoPreview(dataUrl); }}
+                onChange={(blob, previewUrl) => { setPhotoData(blob); setPhotoPreview(previewUrl); }}
               />
               <div style={{ fontFamily: 'var(--font-ui)', fontSize: 12.5, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
                 click to upload a photo<br />
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 0.8, opacity: 0.7 }}>
-                  images are resized and saved locally
+                  resized to 900px and stored in the cloud
                 </span>
               </div>
             </div>

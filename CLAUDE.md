@@ -9,7 +9,8 @@ Personal life tracker for Josie (and Sammy for café visits). Records cafés, co
 - **React** — CDN (unpkg), React 18 + Babel standalone. No `@astrojs/react`. JSX files are inlined into the HTML shell at build time via Vite `?raw` imports.
 - **Database** — Cloudflare D1 (binding: `DB`)
 - **Settings** — Cloudflare KV (binding: `SETTINGS`)
-- **Photos** — IndexedDB (browser-side, no server storage)
+- **Photos** — Cloudflare R2 (binding: `PHOTOS`), served via `/api/photos/:id`
+- **Auth** — Cloudflare Access injects `cf-access-authenticated-user-email`; edit UI hidden for unauthenticated visitors
 - **Custom beds** — localStorage (config only; entries are in D1)
 - **TypeScript** — strict mode (`astro/tsconfigs/strict`)
 
@@ -17,12 +18,16 @@ Personal life tracker for Josie (and Sammy for café visits). Records cafés, co
 
 ```
 src/
-  env.d.ts              # Cloudflare binding types (DB, SETTINGS)
+  env.d.ts              # Cloudflare binding types (DB, SETTINGS, PHOTOS)
+  lib/
+    auth.ts             # requireAuth() guard — checks cf-access-authenticated-user-email
   pages/
     index.astro         # HTML shell — inlines all JSX, loading state, App root
     api/
-      entries.ts        # GET / POST / DELETE entries in D1
-      settings.ts       # GET / PUT DEFAULT_WEIGHTS in KV
+      auth/me.ts        # GET — returns { authenticated, email }; always true in dev
+      entries.ts        # GET (public) / POST / DELETE (guarded) entries in D1
+      settings.ts       # GET (public) / PUT (guarded) DEFAULT_WEIGHTS in KV
+      photos/[id].ts    # GET (public) / POST / DELETE (guarded) photos in R2
   scripts/              # Client-side JSX (browser-executed via Babel)
     data.jsx            # CATEGORIES config, helpers, async CRUD via fetch()
     app.jsx             # Sidebar, views, AddSheet, DetailView
@@ -47,10 +52,21 @@ components → photos → coffee → data → app → dashboard → new-bed
 ```
 
 ### Data flow
-1. `App` mounts → calls `hydrate()` + `fetch('/api/settings')` in parallel
+1. `App` mounts → calls `hydrate()`, `fetch('/api/settings')`, `fetch('/api/auth/me')` in parallel
 2. `hydrate()` GETs `/api/entries`, populates the global `ALL_DATA` object grouped by category
 3. `setLoading(false)` triggers render with real data
-4. Mutations (add/update/delete) call the API then update `ALL_DATA` in place (optimistic)
+4. `canEdit` state controls visibility of all edit/add/delete UI
+5. Mutations call the API then update `ALL_DATA` in place (optimistic)
+
+### Auth flow
+- `GET /api/auth/me` → `{ authenticated: bool, email }`. In dev, always returns `authenticated: true`.
+- In production, Cloudflare Access injects `cf-access-authenticated-user-email` on authenticated requests.
+- Edit UI (add/edit/delete buttons, new bed) is hidden when `canEdit = false`.
+- API mutation routes (`POST`/`DELETE` entries, `PUT` settings, `POST`/`DELETE` photos) call `requireAuth()` which returns 401 if the Cloudflare Access header is missing. In dev, `requireAuth()` always passes.
+- **Configure Cloudflare Access** in the Cloudflare dashboard: Zero Trust → Access → Applications → add application for your Pages domain.
+
+### Photo storage (R2)
+Photos are uploaded to R2 at key = entry id. `PhotoDisplay` renders `<img src="/api/photos/:id">` and falls back to the SVG placeholder via `onError`. No IndexedDB is used.
 
 ### D1 schema
 `entries(id, category, name, date, notes, score, metadata TEXT)` — `metadata` is a JSON blob holding all category-specific fields: `photo`, `tags`, `price`, `kind`, `me`/`sammy` (cafes), `ingredients`/`instructions` (cooking), `attributes`/`flavors` (coffee), etc.
@@ -60,19 +76,30 @@ Josie and Sammy each score `ambiance`, `taste`, `originality` (1–10). These ar
 
 ## Cloudflare Setup
 
-Run once to create cloud resources:
+### One-time resource creation
 ```bash
-wrangler d1 create thegarden-db        # paste database_id into wrangler.toml
-wrangler kv namespace create SETTINGS  # paste id + preview_id into wrangler.toml
+wrangler d1 create thegarden-db              # paste database_id into wrangler.toml
+wrangler kv namespace create SETTINGS        # paste id + preview_id into wrangler.toml
+wrangler r2 bucket create thegarden-photos   # bucket_name already set in wrangler.toml
 ```
 
-Seed the database (both local and remote):
+### Seed the database
 ```bash
 npx wrangler d1 execute thegarden-db --local  --file=schema.sql   # local dev
 npx wrangler d1 execute thegarden-db --remote --file=schema.sql   # production
 ```
+Re-run any time — all INSERTs use `OR IGNORE` so they're idempotent.
 
-Re-run `--local` any time — all INSERTs use `OR IGNORE` so they're idempotent.
+### Cloudflare Pages deployment
+1. Push to GitHub — Pages picks up `main` automatically
+2. In Pages project settings → **Settings → Functions → Bindings**, add all three bindings (`DB`, `SETTINGS`, `PHOTOS`) — or they're read from `wrangler.toml` if using Wrangler CI deploy
+3. Set **build command**: `npm run build`, **output directory**: `dist`
+
+### Cloudflare Access (login to edit)
+1. Cloudflare dashboard → **Zero Trust → Access → Applications**
+2. Add application → **Self-hosted** → set your domain (e.g. `thegarden.pages.dev`)
+3. Add a policy: **Allow** emails = `josiehsu517@gmail.com` (or use GitHub/Google IdP)
+4. This makes the `cf-access-authenticated-user-email` header available on authenticated requests, enabling edit UI and unblocking mutation API routes
 
 ## Local Dev
 

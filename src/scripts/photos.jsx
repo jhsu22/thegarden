@@ -1,43 +1,11 @@
-// Photo storage (IndexedDB) + PhotoDisplay + PhotoUpload components
+// Photo storage backed by Cloudflare R2 via /api/photos/:id
+// Photos are keyed by entry id. The browser never holds a data URL —
+// PhotoDisplay renders a direct /api/photos/:id URL and falls back to the
+// SVG placeholder if the R2 key doesn't exist (404).
 
-const DB_NAME = 'garden-photos';
-const STORE_NAME = 'photos';
-let _db = null;
+// ─── API helpers ─────────────────────────────────────────────────────────────
 
-const openPhotoDb = () => {
-  if (_db) return Promise.resolve(_db);
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = (e) => e.target.result.createObjectStore(STORE_NAME);
-    req.onsuccess = (e) => { _db = e.target.result; resolve(_db); };
-    req.onerror = () => reject(req.error);
-  });
-};
-
-const savePhoto = (id, dataUrl) =>
-  openPhotoDb().then((db) => new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).put(dataUrl, id);
-    tx.oncomplete = resolve;
-    tx.onerror = () => reject(tx.error);
-  }));
-
-const loadPhoto = (id) =>
-  openPhotoDb().then((db) => new Promise((resolve) => {
-    const req = db.transaction(STORE_NAME).objectStore(STORE_NAME).get(id);
-    req.onsuccess = () => resolve(req.result || null);
-    req.onerror = () => resolve(null);
-  }));
-
-const deletePhoto = (id) =>
-  openPhotoDb().then((db) => new Promise((resolve) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).delete(id);
-    tx.oncomplete = resolve;
-    tx.onerror = resolve;
-  }));
-
-// Resize + compress to JPEG before storing so photos stay small
+// Resize a File to a JPEG Blob (max 900px on longest side, 82% quality).
 const resizeImage = (file, maxDim = 900) =>
   new Promise((resolve) => {
     const img = new Image();
@@ -50,43 +18,59 @@ const resizeImage = (file, maxDim = 900) =>
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', 0.82));
+      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.82);
     };
     img.src = url;
   });
 
+// Upload photo Blob to R2.
+const savePhoto = (id, blob) =>
+  fetch(`/api/photos/${encodeURIComponent(id)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': blob.type || 'image/jpeg' },
+    body: blob,
+  }).catch(console.error);
+
+// Returns the photo URL if it exists in R2, otherwise null.
+// Uses HEAD — no body transferred.
+const loadPhoto = (id) =>
+  fetch(`/api/photos/${encodeURIComponent(id)}`, { method: 'HEAD' })
+    .then((r) => r.ok ? `/api/photos/${encodeURIComponent(id)}` : null)
+    .catch(() => null);
+
+// Delete photo from R2.
+const deletePhoto = (id) =>
+  fetch(`/api/photos/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {});
+
 // ─── PhotoDisplay ─────────────────────────────────────────────────────────────
-// Drop-in replacement for PhotoPlaceholder — shows the real photo if one has
-// been saved for this entry, otherwise falls back to the striped placeholder.
+// Renders the R2-hosted photo or falls back to the SVG placeholder.
+// Starts optimistic (assumes photo exists); onError triggers the fallback.
 const PhotoDisplay = ({ entryId, tone, shape, size = 'md', label }) => {
-  const [src, setSrc] = React.useState(null);
-
-  React.useEffect(() => {
-    let live = true;
-    loadPhoto(entryId).then((url) => { if (live) setSrc(url || null); });
-    return () => { live = false; };
-  }, [entryId]);
-
+  const [hasPhoto, setHasPhoto] = React.useState(true);
   const dims = { sm: 56, md: 96, lg: 160, xl: 240 }[size] || 96;
 
-  if (src) {
-    return (
-      <img
-        src={src}
-        alt={label || ''}
-        style={{
-          width: dims, height: dims, borderRadius: 14,
-          objectFit: 'cover', flex: 'none', display: 'block',
-          boxShadow: 'inset 0 0 0 1px rgba(60, 40, 50, 0.08)',
-        }}
-      />
-    );
+  if (!hasPhoto) {
+    return <PhotoPlaceholder tone={tone} shape="rounded" size={size} label={label} />;
   }
-  return <PhotoPlaceholder tone={tone} shape="rounded" size={size} label={label} />;
+
+  return (
+    <img
+      src={`/api/photos/${encodeURIComponent(entryId)}`}
+      alt={label || ''}
+      onError={() => setHasPhoto(false)}
+      style={{
+        width: dims, height: dims, borderRadius: 14,
+        objectFit: 'cover', flex: 'none', display: 'block',
+        boxShadow: 'inset 0 0 0 1px rgba(60, 40, 50, 0.08)',
+      }}
+    />
+  );
 };
 
 // ─── PhotoUpload ──────────────────────────────────────────────────────────────
-// Square click-to-upload widget used inside the add/edit sheet.
+// Click-to-upload widget in the add/edit sheet.
+// onChange(blob, previewUrl) — blob is uploaded to R2, previewUrl is a
+// temporary object URL for the in-sheet preview.
 const PhotoUpload = ({ preview, onChange }) => {
   const inputRef = React.useRef(null);
   const [hovering, setHovering] = React.useState(false);
@@ -139,7 +123,12 @@ const PhotoUpload = ({ preview, onChange }) => {
         style={{ display: 'none' }}
         onChange={(e) => {
           const file = e.target.files[0];
-          if (file) resizeImage(file).then(onChange);
+          if (file) {
+            resizeImage(file).then((blob) => {
+              const previewUrl = URL.createObjectURL(blob);
+              onChange(blob, previewUrl);
+            });
+          }
           e.target.value = '';
         }}
       />
@@ -147,4 +136,4 @@ const PhotoUpload = ({ preview, onChange }) => {
   );
 };
 
-Object.assign(window, { savePhoto, loadPhoto, deletePhoto, PhotoDisplay, PhotoUpload });
+Object.assign(window, { savePhoto, loadPhoto, deletePhoto, resizeImage, PhotoDisplay, PhotoUpload });
