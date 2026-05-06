@@ -124,6 +124,59 @@ const Glyph = ({ kind, size = 22, color = 'currentColor' }) => {
           <circle {...props} cx="12" cy="12" r="1" fill={color} />
         </svg>
       );
+    case 'bean':
+      return (
+        <svg viewBox="0 0 24 24" {...s} aria-hidden="true">
+          <ellipse {...props} cx="12" cy="12" rx="5" ry="8.5" transform="rotate(-15 12 12)" />
+          <path {...props} d="M10 4.5 C 16.5 9 7.5 15 14 19.5" />
+        </svg>
+      );
+    case 'music':
+      return (
+        <svg viewBox="0 0 24 24" {...s} aria-hidden="true">
+          <ellipse {...props} cx="8.5" cy="18" rx="3.5" ry="2.4" transform="rotate(-20 8.5 18)" />
+          <ellipse {...props} cx="18" cy="15.5" rx="3.5" ry="2.4" transform="rotate(-20 18 15.5)" />
+          <path {...props} d="M12 17 V 6 L 21.5 3.5 V 14" />
+          <line {...props} x1="12" y1="6" x2="21.5" y2="3.5" strokeWidth="2.2" />
+        </svg>
+      );
+    case 'pin':
+      return (
+        <svg viewBox="0 0 24 24" {...s} aria-hidden="true">
+          <path {...props} d="M12 2 C 8.7 2 6 4.7 6 8 C 6 13 12 22 12 22 C 12 22 18 13 18 8 C 18 4.7 15.3 2 12 2 Z" />
+          <circle {...props} cx="12" cy="8" r="2.4" />
+        </svg>
+      );
+    case 'heart':
+      return (
+        <svg viewBox="0 0 24 24" {...s} aria-hidden="true">
+          <path {...props} d="M12 21 C 12 21 3 15 3 9 C 3 6.2 5.2 4 8 4 C 9.9 4 11.4 5 12 6.2 C 12.6 5 14.1 4 16 4 C 18.8 4 21 6.2 21 9 C 21 15 12 21 12 21 Z" />
+        </svg>
+      );
+    case 'dumbbell':
+      return (
+        <svg viewBox="0 0 24 24" {...s} aria-hidden="true">
+          <path {...props} d="M8 12 H 16" />
+          <rect {...props} x="2" y="9.5" width="4" height="5" rx="1.4" />
+          <rect {...props} x="18" y="9.5" width="4" height="5" rx="1.4" />
+          <path {...props} d="M6 8.5 V 15.5 M 18 8.5 V 15.5" />
+        </svg>
+      );
+    case 'pen':
+      return (
+        <svg viewBox="0 0 24 24" {...s} aria-hidden="true">
+          <path {...props} d="M15.5 3 L21 8.5 L8 21.5 L2.5 21.5 L2.5 16 Z" />
+          <path {...props} d="M13.5 5 L19 10.5" />
+        </svg>
+      );
+    case 'wine':
+      return (
+        <svg viewBox="0 0 24 24" {...s} aria-hidden="true">
+          <path {...props} d="M8 3 H 16 L 15 10 Q 14.5 14 12 14 Q 9.5 14 9 10 Z" />
+          <path {...props} d="M12 14 V 20" />
+          <path {...props} d="M8.5 20 H 15.5" />
+        </svg>
+      );
     default:
       return null;
   }

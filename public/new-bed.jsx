@@ -9,7 +9,7 @@ const NewBedModal = ({ onClose, onCreated }) => {
   const [kindA, setKindA] = React.useState('');
   const [kindB, setKindB] = React.useState('');
 
-  const GLYPHS = ['cup', 'whisk', 'book', 'reel', 'screen', 'disc', 'leaf', 'sparkle'];
+  const GLYPHS = ['cup', 'whisk', 'book', 'reel', 'screen', 'disc', 'bean', 'music', 'pin', 'heart', 'dumbbell', 'pen', 'wine', 'leaf', 'sparkle'];
   const ACCENTS = ['rose', 'sage', 'butter', 'plum', 'sky', 'clay'];
   const RATING_MODES = [
     { id: 'simple',    title: 'Single score',  hint: 'one slider, 1.0 – 10.0' },
