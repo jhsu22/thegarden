@@ -13,6 +13,7 @@ const CATEGORIES = [
   { id: 'movies',  label: 'Movies',              glyph: 'reel',   accent: 'plum',   rating: 'simple',    extraField: null },
   { id: 'shows',   label: 'Shows',               glyph: 'screen', accent: 'sage',   rating: 'simple',    extraField: null },
   { id: 'albums',  label: 'Albums',              glyph: 'disc',   accent: 'sky',    rating: 'simple',    extraField: 'artist' },
+  { id: 'coffee',  label: 'Coffee',              glyph: 'bean',   accent: 'butter', rating: 'simple',    extraField: null },
 ];
 
 // Per-person, per-kind weights for cafés/restaurants
@@ -307,9 +308,42 @@ const ALBUMS = [
   },
 ];
 
+const COFFEE = [
+  {
+    id: 'cf1', name: 'Ethiopia Yirgacheffe',
+    date: '2026-04-30', price: 24,
+    origin: 'Yirgacheffe, Ethiopia', roaster: 'Blue Bottle Coffee',
+    notes: 'Intensely floral — jasmine and bergamot up front. The acidity is electric, almost sparkling. One of the best cups this year.',
+    photo: { tone: 'butter', shape: 'rounded' }, score: 9.2,
+    tags: ['single-origin', 'light-roast', 'washed'],
+    attributes: { complexity: 4.5, body: 2.5, roastLevel: 1.5, acidity: 4.5 },
+    flavors: { sweet: 3.5, bitter: 1, earthy: 1.5, floral: 5, nutty: 0.5, spicy: 0.5 },
+  },
+  {
+    id: 'cf2', name: 'Colombia Huila',
+    date: '2026-04-14', price: 22,
+    origin: 'Huila, Colombia', roaster: 'Verve Coffee Roasters',
+    notes: 'Caramel sweetness with a juicy plum finish. Medium body, approachable acidity — a reliable morning pour-over.',
+    photo: { tone: 'rose', shape: 'rounded' }, score: 8.4,
+    tags: ['single-origin', 'medium-roast', 'washed'],
+    attributes: { complexity: 3.5, body: 3.5, roastLevel: 3, acidity: 3 },
+    flavors: { sweet: 4, bitter: 2, earthy: 2, floral: 2, nutty: 3, spicy: 1 },
+  },
+  {
+    id: 'cf3', name: 'Sumatra Mandheling',
+    date: '2026-03-22', price: 20,
+    origin: 'North Sumatra, Indonesia', roaster: 'Intelligentsia Coffee',
+    notes: 'Earthy, syrupy, and bold. Dark chocolate and cedar. Not subtle — exactly what you want it to be.',
+    photo: { tone: 'clay', shape: 'rounded' }, score: 7.8,
+    tags: ['single-origin', 'dark-roast', 'wet-hulled'],
+    attributes: { complexity: 3, body: 5, roastLevel: 4.5, acidity: 1.5 },
+    flavors: { sweet: 2, bitter: 4, earthy: 5, floral: 0.5, nutty: 3.5, spicy: 2.5 },
+  },
+];
+
 const ALL_DATA = {
   cafes: CAFES, cooking: COOKING, books: BOOKS,
-  movies: MOVIES, shows: SHOWS, albums: ALBUMS,
+  movies: MOVIES, shows: SHOWS, albums: ALBUMS, coffee: COFFEE,
 };
 
 // ────────────────────────────────────────────────────────────

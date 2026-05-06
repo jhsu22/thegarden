@@ -206,7 +206,7 @@ const FeedRow = ({ row, onOpen, weights }) => {
           fontFamily: 'var(--font-ui)', fontSize: 12.5, color: 'var(--ink-soft)',
           textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap',
         }}>
-          {row.location || row.author || row.artist || row.kind || ''}
+          {row.location || row.author || row.artist || row.origin || row.kind || ''}
         </div>
       </div>
       <ScoreBadge score={row._score} size="sm" />
@@ -500,7 +500,7 @@ const ItemCard = ({ item, catId, onOpen }) => {
             }}>{item.name}</div>
             <div style={{
               fontFamily: 'var(--font-ui)', fontSize: 12.5, color: 'var(--ink-soft)',
-            }}>{item.location || item.author || item.artist || ''}</div>
+            }}>{item.location || item.author || item.artist || item.origin || ''}</div>
             {catId === 'cooking' && (item.difficulty || item.time) && (
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
                 {item.difficulty && DIFF_STYLE[item.difficulty] && (
@@ -742,9 +742,13 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete }) => {
                 fontFamily: 'var(--font-display)', fontSize: 15, fontStyle: 'italic',
                 color: 'var(--ink-soft)', marginTop: 6,
               }}>
-                {item.author || item.artist || item.location || ''}
-                {(item.author || item.artist || item.location) && ' · '}{fmtDate(item.date)}
-                {item.price ? ` · $${item.price}` : ''}
+                {catId === 'coffee'
+                  ? [item.origin, item.roaster].filter(Boolean).join(' · ')
+                  : (item.author || item.artist || item.location || '')}
+                {(catId === 'coffee'
+                  ? (item.origin || item.roaster)
+                  : (item.author || item.artist || item.location)) && ' · '}
+                {fmtDate(item.date)}{item.price ? ` · $${item.price}` : ''}
               </div>
             </div>
           </div>
@@ -815,6 +819,9 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete }) => {
 
           {/* Cooking details — ingredients, scaling, instructions */}
           {catId === 'cooking' && <CookingDetails item={item} />}
+
+          {/* Coffee details — profile circles + flavor wheel */}
+          {catId === 'coffee' && <CoffeeDetails item={item} />}
 
           {/* Tags */}
           {item.tags && (
@@ -996,6 +1003,7 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
 
   // Cooking-specific fields (always defined to satisfy hooks rules)
   const isCooking = cat === 'cooking';
+  const isCoffee  = cat === 'coffee';
   const [difficulty, setDifficulty] = useState(editItem?.difficulty || '');
   const [cookTime, setCookTime] = useState(editItem?.time || '');
   const [portions, setPortions] = useState(editItem?.portions != null ? String(editItem.portions) : '');
@@ -1010,6 +1018,23 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
     setIngredients(ingredients.map((ing, i) => i === idx ? { ...ing, [key]: val } : ing));
   const removeIngredient = (idx) =>
     setIngredients(ingredients.filter((_, i) => i !== idx));
+
+  const [coffeeOrigin,  setCoffeeOrigin]  = useState(editItem?.origin  || '');
+  const [coffeeRoaster, setCoffeeRoaster] = useState(editItem?.roaster || '');
+  const [coffeeAttrs,   setCoffeeAttrs]   = useState({
+    complexity: editItem?.attributes?.complexity  ?? 2.5,
+    body:       editItem?.attributes?.body        ?? 2.5,
+    roastLevel: editItem?.attributes?.roastLevel  ?? 2.5,
+    acidity:    editItem?.attributes?.acidity     ?? 2.5,
+  });
+  const [coffeeFlavors, setCoffeeFlavors] = useState({
+    sweet:  editItem?.flavors?.sweet  ?? 0,
+    bitter: editItem?.flavors?.bitter ?? 0,
+    earthy: editItem?.flavors?.earthy ?? 0,
+    floral: editItem?.flavors?.floral ?? 0,
+    nutty:  editItem?.flavors?.nutty  ?? 0,
+    spicy:  editItem?.flavors?.spicy  ?? 0,
+  });
 
   const isCafe = ratingMode === 'cafe';
   const wJ = personWeights(weights, 'josie', kind);
@@ -1033,6 +1058,12 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
       fields.sammy = withSammy ? { ...sammy } : null;
     } else {
       fields.score = +score.toFixed(1);
+    }
+    if (isCoffee) {
+      if (coffeeOrigin.trim())  fields.origin  = coffeeOrigin.trim();
+      if (coffeeRoaster.trim()) fields.roaster = coffeeRoaster.trim();
+      fields.attributes = { ...coffeeAttrs };
+      fields.flavors    = { ...coffeeFlavors };
     }
     if (isCooking) {
       const filteredIngredients = ingredients
@@ -1154,6 +1185,18 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
               <Input value={price} onChange={setPrice} placeholder="optional" />
             </Field>
           </div>
+
+          {/* Coffee — origin + roaster right after date/price */}
+          {isCoffee && (
+            <div className="add-sheet-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Origin">
+                <Input value={coffeeOrigin} onChange={setCoffeeOrigin} placeholder="Yirgacheffe, Ethiopia" />
+              </Field>
+              <Field label="Roaster">
+                <Input value={coffeeRoaster} onChange={setCoffeeRoaster} placeholder="Blue Bottle Coffee" />
+              </Field>
+            </div>
+          )}
 
           {kindOpts && (
             <Field label="Type">
@@ -1333,6 +1376,48 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
               />
             </Field>
           )}
+
+          {/* Coffee — profile (1-5) + flavor sliders */}
+          {isCoffee && (<>
+            <div>
+              <FieldLabel>Profile (1 – 5)</FieldLabel>
+              <div style={{ borderRadius: 12, border: '1px solid var(--rule)', background: 'var(--paper-warm)', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {COFFEE_ATTRS.map(({ key, label }) => (
+                  <div key={key}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--ink-soft)' }}>{label}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <CircleRating value={coffeeAttrs[key]} size={11} />
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--ink)', minWidth: 20, textAlign: 'right' }}>{coffeeAttrs[key]}</span>
+                      </div>
+                    </div>
+                    <input type="range" min="0" max="5" step="0.5" value={coffeeAttrs[key]}
+                      onChange={(e) => setCoffeeAttrs({ ...coffeeAttrs, [key]: +e.target.value })}
+                      style={{ width: '100%', accentColor: 'var(--accent-strong)' }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <FieldLabel>Flavors (0 – 5)</FieldLabel>
+              <div style={{ borderRadius: 12, border: '1px solid var(--rule)', background: 'var(--paper-warm)', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {COFFEE_FLAVORS.map(({ key, label }) => (
+                  <div key={key}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--ink-soft)' }}>{label}</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--ink)' }}>{coffeeFlavors[key]}</span>
+                    </div>
+                    <input type="range" min="0" max="5" step="0.5" value={coffeeFlavors[key]}
+                      onChange={(e) => setCoffeeFlavors({ ...coffeeFlavors, [key]: +e.target.value })}
+                      style={{ width: '100%', accentColor: 'var(--accent-strong)' }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>)}
 
           <Field label="Notes">
             <textarea
