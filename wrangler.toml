@@ -3,19 +3,16 @@ compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "./dist"
 
-# Run: wrangler d1 create thegarden-db  →  paste database_id below
 [[d1_databases]]
 binding = "DB"
 database_name = "thegarden-db"
-database_id = "YOUR_D1_DATABASE_ID"
+database_id = "b6c4ef3c-3b11-445e-8cc0-9cb92e5efee4"
 
-# Run: wrangler kv namespace create SETTINGS  →  paste ids below
 [[kv_namespaces]]
 binding = "SETTINGS"
-id = "YOUR_KV_NAMESPACE_ID"
-preview_id = "YOUR_KV_NAMESPACE_PREVIEW_ID"
+id = "f914b3334817405bae6854a30625a0bc"
+preview_id = "287ee85e00b04bd2893ae7e50eef8186"
 
-# Run: wrangler r2 bucket create thegarden-photos  →  paste bucket_name below
 [[r2_buckets]]
 binding = "PHOTOS"
 bucket_name = "thegarden-photos"
