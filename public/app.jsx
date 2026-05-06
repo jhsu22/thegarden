@@ -751,22 +751,7 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete }) => {
         </div>
 
         <div className="pad-detail" style={{ padding: 32 }}>
-          {/* Notes */}
-          {item.notes && (
-            <div style={{ marginBottom: 28 }}>
-              <div style={{
-                fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.6,
-                textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 8,
-              }}>Notes</div>
-              <p style={{
-                fontFamily: 'var(--font-display)', fontSize: 17, fontStyle: 'italic',
-                color: 'var(--ink)', margin: 0, lineHeight: 1.55,
-                paddingLeft: 14, borderLeft: '2px solid var(--accent-strong)',
-              }}>{item.notes}</p>
-            </div>
-          )}
-
-          {/* Cooking — difficulty + time above the rating */}
+          {/* Cooking — difficulty + time above notes */}
           {catId === 'cooking' && (item.difficulty || item.time) && (() => {
             const diff = item.difficulty ? DIFF_STYLE[item.difficulty] : null;
             return (
@@ -797,6 +782,21 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete }) => {
               </div>
             );
           })()}
+
+          {/* Notes */}
+          {item.notes && (
+            <div style={{ marginBottom: 28 }}>
+              <div style={{
+                fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.6,
+                textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 8,
+              }}>Notes</div>
+              <p style={{
+                fontFamily: 'var(--font-display)', fontSize: 17, fontStyle: 'italic',
+                color: 'var(--ink)', margin: 0, lineHeight: 1.55,
+                paddingLeft: 14, borderLeft: '2px solid var(--accent-strong)',
+              }}>{item.notes}</p>
+            </div>
+          )}
 
           {/* Scores */}
           {isCafe ? (
