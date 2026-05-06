@@ -65,7 +65,7 @@ const HexRadar = ({ flavors }) => {
   const dataShape = poly(COFFEE_FLAVORS.map(({ key }, i) => pt(i, flavors[key] || 0)));
 
   return (
-    <svg viewBox="0 0 300 250" width="100%" style={{ display: 'block', maxWidth: 300 }}>
+    <svg viewBox="0 0 300 250" width="100%" style={{ display: 'block' }}>
       {/* Grid rings */}
       {gridLines.map((d, i) => (
         <path key={i} d={d} fill="none"
@@ -106,19 +106,8 @@ const CoffeeDetails = ({ item }) => {
   if (!hasAttrs && !hasFlavors) return null;
 
   return (
-    <div style={{ marginBottom: 28, display: 'flex', gap: 28, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-      {/* Flavor wheel — left, takes available space */}
-      {hasFlavors && (
-        <div style={{ flex: '1 1 200px' }}>
-          <div style={{
-            fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.6,
-            textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 10,
-          }}>Flavor Profile</div>
-          <HexRadar flavors={item.flavors} />
-        </div>
-      )}
-
-      {/* Profile circles — right, fixed width */}
+    <div style={{ marginBottom: 28, display: 'flex', gap: 32, alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* Profile circles — left, fixed width, vertically centred by alignItems:center above */}
       {hasAttrs && (
         <div style={{ flex: '0 0 auto', minWidth: 160 }}>
           <div style={{
@@ -142,6 +131,17 @@ const CoffeeDetails = ({ item }) => {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Flavor wheel — right, fills remaining space */}
+      {hasFlavors && (
+        <div style={{ flex: '1 1 200px' }}>
+          <div style={{
+            fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.6,
+            textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 10,
+          }}>Flavor Profile</div>
+          <HexRadar flavors={item.flavors} />
         </div>
       )}
     </div>
