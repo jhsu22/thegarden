@@ -185,7 +185,7 @@ const FeedRow = ({ row, onOpen, weights }) => {
         borderBottom: '1px solid var(--rule)', cursor: 'pointer',
       }}
     >
-      <PhotoPlaceholder tone={row.photo.tone} shape={row.photo.shape} size="sm" />
+      <PhotoDisplay entryId={row.id} tone={row.photo.tone} shape={row.photo.shape} size="sm" />
       <div style={{ minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
           <CatGlyph kind={cat.glyph} size={13} />
@@ -313,7 +313,7 @@ const HomeView = ({ weights, onOpen, onAdd }) => {
               <DottedDivider color="var(--ink-soft)" />
               {top ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
-                  <PhotoPlaceholder tone={top.photo.tone} shape={top.photo.shape} size="sm" />
+                  <PhotoDisplay entryId={top.id} tone={top.photo.tone} shape={top.photo.shape} size="sm" />
                   <div style={{ minWidth: 0 }}>
                     <div style={{
                       fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: 1,
@@ -487,7 +487,7 @@ const ItemCard = ({ item, catId, onOpen }) => {
         position: 'relative',
       }}>
         <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-          <PhotoPlaceholder tone={item.photo.tone} shape={item.photo.shape} size="md" />
+          <PhotoDisplay entryId={item.id} tone={item.photo.tone} shape={item.photo.shape} size="md" />
           <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
             <div style={{
               fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1.2,
@@ -586,7 +586,7 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete }) => {
           >×</button>
 
           <div className="detail-header-row" style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-            <PhotoPlaceholder tone={item.photo.tone} shape={item.photo.shape} size="lg" label="photo" />
+            <PhotoDisplay entryId={item.id} tone={item.photo.tone} shape={item.photo.shape} size="lg" label="photo" />
             <div style={{ flex: 1, paddingTop: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <CatGlyph kind={cat.glyph} size={14} color="var(--accent-strong)" />
@@ -813,6 +813,12 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
   const [withSammy, setWithSammy] = useState(isEdit ? editItem.sammy !== null : ratingMode === 'cafe');
   const [me, setMe] = useState(editItem?.me || { ambiance: 8, taste: 8, originality: 8 });
   const [sammy, setSammy] = useState(editItem?.sammy || { ambiance: 8, taste: 8, originality: 8 });
+  const [photoData, setPhotoData] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+
+  useEffect(() => {
+    if (editItem) loadPhoto(editItem.id).then((url) => { if (url) setPhotoPreview(url); });
+  }, [editItem?.id]);
 
   const isCafe = ratingMode === 'cafe';
   const wJ = personWeights(weights, 'josie', kind);
@@ -839,12 +845,14 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
     }
     if (isEdit) {
       updateEntry(editCatId, editItem.id, fields);
+      if (photoData) savePhoto(editItem.id, photoData);
       if (onSaved) onSaved(editCatId);
     } else {
       const id = `u${Date.now().toString(36)}`;
       const tone = TONES[Math.floor(Math.random() * TONES.length)];
       const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
       addEntry(cat, { ...fields, id, photo: { tone, shape } });
+      if (photoData) savePhoto(id, photoData);
       if (onSaved) onSaved(cat);
     }
     onClose();
@@ -915,6 +923,23 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
               </div>
             </Field>
           )}
+
+          {/* Photo */}
+          <div>
+            <FieldLabel>Photo (optional)</FieldLabel>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <PhotoUpload
+                preview={photoPreview}
+                onChange={(dataUrl) => { setPhotoData(dataUrl); setPhotoPreview(dataUrl); }}
+              />
+              <div style={{ fontFamily: 'var(--font-ui)', fontSize: 12.5, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
+                click to upload a photo<br />
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 0.8, opacity: 0.7 }}>
+                  images are resized and saved locally
+                </span>
+              </div>
+            </div>
+          </div>
 
           <Field label="Name">
             <Input value={name} onChange={setName} placeholder="What was it called?" />

@@ -166,6 +166,7 @@
 
 <script type="text/babel" src="/data.jsx"></script>
 <script type="text/babel" src="/components.jsx"></script>
+<script type="text/babel" src="/photos.jsx"></script>
 <script type="text/babel" src="/app.jsx"></script>
 <script type="text/babel" src="/dashboard.jsx"></script>
 <script type="text/babel" src="/new-bed.jsx"></script>
@@ -208,6 +209,7 @@
 
     const handleDelete = (catId, id) => {
       deleteEntry(catId, id);
+      deletePhoto(id);
       setDetail(null);
       setBump((b) => b + 1);
     };
