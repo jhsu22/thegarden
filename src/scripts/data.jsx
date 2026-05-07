@@ -19,7 +19,7 @@ const DEFAULT_WEIGHTS = {
   },
   sammy: {
     café:       { ambiance: 0.30, taste: 0.35, originality: 0.35 },
-    restaurant: { ambiance: 0.10, taste: 0.60, originality: 0.20 },
+    restaurant: { ambiance: 0.10, taste: 0.60, originality: 0.30 },
   },
 };
 

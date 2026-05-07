@@ -537,6 +537,11 @@ const ItemCard = ({ item, catId, onOpen }) => {
             <div style={{
               fontFamily: 'var(--font-ui)', fontSize: 12.5, color: 'var(--ink-soft)',
             }}>{item.location || item.author || item.artist || item.origin || ''}</div>
+            {catId === 'coffee' && item.roaster && (
+              <div style={{
+                fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--ink-soft)', marginTop: 1,
+              }}>{item.roaster}</div>
+            )}
             {catId === 'cooking' && (item.difficulty || item.time) && (
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
                 {item.difficulty && DIFF_STYLE[item.difficulty] && (
