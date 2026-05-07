@@ -107,6 +107,12 @@ const hydrate = async () => {
       }
     }
   }
+
+  // Apply saved bed order
+  try {
+    const savedOrder = JSON.parse(localStorage.getItem(BEDS_ORDER_KEY));
+    if (Array.isArray(savedOrder) && savedOrder.length) applyBedOrder(savedOrder);
+  } catch {}
 };
 
 // ── CRUD — writes go to D1 and update local cache optimistically ──────────
@@ -140,6 +146,22 @@ const deleteEntry = async (catId, id) => {
   });
   ALL_DATA[catId] = (ALL_DATA[catId] || []).filter((i) => i.id !== id);
   return true;
+};
+
+// ── Bed ordering — persisted to localStorage ─────────────────────────────
+const BEDS_ORDER_KEY = 'garden.beds.order';
+
+const applyBedOrder = (orderedIds) => {
+  const lookup = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
+  const known = new Set(CATEGORIES.map((c) => c.id));
+  const reordered = orderedIds.filter((id) => known.has(id)).map((id) => lookup[id]);
+  const rest = CATEGORIES.filter((c) => !orderedIds.includes(c.id));
+  CATEGORIES.splice(0, CATEGORIES.length, ...reordered, ...rest);
+};
+
+const reorderBeds = (orderedIds) => {
+  applyBedOrder(orderedIds);
+  try { localStorage.setItem(BEDS_ORDER_KEY, JSON.stringify(orderedIds)); } catch {}
 };
 
 // ── Custom beds — stored in localStorage (they're config, not data) ───────
@@ -179,5 +201,5 @@ Object.assign(window, {
   CATEGORIES, DEFAULT_WEIGHTS, ALL_DATA,
   weighted, personWeights, cafeScore, itemScore, flatFeed,
   fmtScore, fmtDate, fmtMonthYear,
-  hydrate, addEntry, updateEntry, deleteEntry, addBed, removeBed,
+  hydrate, addEntry, updateEntry, deleteEntry, addBed, removeBed, reorderBeds,
 });

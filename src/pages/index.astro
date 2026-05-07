@@ -317,6 +317,11 @@ const reactDomSrc = isProd
       setCanEdit(false);
     };
 
+    const handleReorderBeds = (orderedIds) => {
+      reorderBeds(orderedIds);
+      setBump((b) => b + 1);
+    };
+
     if (loading) return <LoadingScreen />;
 
     const counts = Object.fromEntries(
@@ -349,7 +354,7 @@ const reactDomSrc = isProd
           <span></span>
         </button>
         <div className={`scrim ${navOpen ? 'open' : ''}`} onClick={() => setNavOpen(false)} />
-        <Sidebar view={view} setView={goView} counts={counts} navOpen={navOpen} onNewBed={() => setAddingBed(true)} canEdit={canEdit} onLogout={handleLogout} />
+        <Sidebar view={view} setView={goView} counts={counts} navOpen={navOpen} onNewBed={() => setAddingBed(true)} canEdit={canEdit} onLogout={handleLogout} onReorderBeds={handleReorderBeds} />
 
         <main style={{
           flex: 1, padding: 'var(--pad-main)', maxWidth: 'var(--max-main)',

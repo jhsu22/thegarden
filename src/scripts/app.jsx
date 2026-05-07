@@ -19,9 +19,26 @@ const getSeason = (month) => {
   return 'winter';
 };
 
-const Sidebar = ({ view, setView, counts, navOpen, onNewBed, canEdit, onLogout }) => {
+const Sidebar = ({ view, setView, counts, navOpen, onNewBed, canEdit, onLogout, onReorderBeds }) => {
   const now = new Date();
   const season = getSeason(now.getMonth());
+  const [dragId, setDragId] = useState(null);
+  const [overId, setOverId] = useState(null);
+
+  const handleDrop = (targetId) => {
+    if (dragId && dragId !== targetId) {
+      const ids = CATEGORIES.map((c) => c.id);
+      const from = ids.indexOf(dragId);
+      const to = ids.indexOf(targetId);
+      if (from >= 0 && to >= 0) {
+        ids.splice(from, 1);
+        ids.splice(to, 0, dragId);
+        onReorderBeds && onReorderBeds(ids);
+      }
+    }
+    setDragId(null);
+    setOverId(null);
+  };
   const thisMonthEntries = Object.values(ALL_DATA).flat().filter((i) => {
     const d = new Date(i.date + 'T12:00:00');
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
@@ -99,15 +116,30 @@ const Sidebar = ({ view, setView, counts, navOpen, onNewBed, canEdit, onLogout }
         }}>Beds</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {CATEGORIES.map((c) => (
-            <NavItem
-              key={c.id} id={c.id} label={c.label}
-              icon={
-<CatGlyph kind={c.glyph} size={18} />
-              }
-              count={counts[c.id]}
-              active={view.name === 'browse' && view.cat === c.id}
-              onClick={() => setView({ name: 'browse', cat: c.id })}
-            />
+            <div
+              key={c.id}
+              draggable={canEdit}
+              onDragStart={() => setDragId(c.id)}
+              onDragOver={(e) => { e.preventDefault(); setOverId(c.id); }}
+              onDrop={() => handleDrop(c.id)}
+              onDragEnd={() => { setDragId(null); setOverId(null); }}
+              style={{
+                borderRadius: 12,
+                opacity: dragId === c.id ? 0.35 : 1,
+                outline: overId === c.id && dragId !== c.id ? '2px solid var(--accent-strong)' : 'none',
+                outlineOffset: -1,
+                cursor: canEdit ? (dragId ? 'grabbing' : 'grab') : undefined,
+                transition: 'opacity 120ms',
+              }}
+            >
+              <NavItem
+                id={c.id} label={c.label}
+                icon={<CatGlyph kind={c.glyph} size={18} />}
+                count={counts[c.id]}
+                active={view.name === 'browse' && view.cat === c.id}
+                onClick={() => setView({ name: 'browse', cat: c.id })}
+              />
+            </div>
           ))}
           {canEdit && (
             <button onClick={onNewBed} style={{
