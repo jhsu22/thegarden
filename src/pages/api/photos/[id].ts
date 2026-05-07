@@ -18,7 +18,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
 
 // POST /api/photos/:id — upload image bytes to R2
 export const POST: APIRoute = async ({ request, params, locals }) => {
-  const guard = requireAuth(request);
+  const guard = requireAuth(request, locals.runtime.env as any);
   if (guard) return guard;
 
   const { PHOTOS } = locals.runtime.env;
@@ -37,7 +37,7 @@ export const POST: APIRoute = async ({ request, params, locals }) => {
 
 // DELETE /api/photos/:id — remove photo from R2
 export const DELETE: APIRoute = async ({ request, params, locals }) => {
-  const guard = requireAuth(request);
+  const guard = requireAuth(request, locals.runtime.env as any);
   if (guard) return guard;
 
   const { PHOTOS } = locals.runtime.env;

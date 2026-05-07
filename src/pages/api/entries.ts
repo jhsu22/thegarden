@@ -40,7 +40,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
 };
 
 export const POST: APIRoute = async ({ request, locals }) => {
-  const guard = requireAuth(request);
+  const guard = requireAuth(request, locals.runtime.env as any);
   if (guard) return guard;
 
   const { DB } = locals.runtime.env;
@@ -64,7 +64,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 };
 
 export const DELETE: APIRoute = async ({ request, locals }) => {
-  const guard = requireAuth(request);
+  const guard = requireAuth(request, locals.runtime.env as any);
   if (guard) return guard;
 
   const { DB } = locals.runtime.env;

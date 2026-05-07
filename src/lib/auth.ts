@@ -1,13 +1,24 @@
-export function getAuthEmail(request: Request): string | null {
-  return request.headers.get('cf-access-authenticated-user-email');
+interface Env {
+  GARDEN_PASSWORD?: string;
 }
 
-// Returns a 401 Response if unauthenticated, or null if the request is allowed.
-// In dev, always returns null so mutations work without Cloudflare Access.
-export function requireAuth(request: Request): Response | null {
+function getCookieToken(request: Request): string | null {
+  const cookie = request.headers.get('cookie') || '';
+  const m = cookie.match(/(?:^|;\s*)garden_auth=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+export function getAuthEmail(request: Request, env: Env = {}): string | null {
+  const cfEmail = request.headers.get('cf-access-authenticated-user-email');
+  if (cfEmail) return cfEmail;
+  const token = getCookieToken(request);
+  if (token && env.GARDEN_PASSWORD && token === env.GARDEN_PASSWORD) return 'josie';
+  return null;
+}
+
+export function requireAuth(request: Request, env: Env = {}): Response | null {
   if (import.meta.env.DEV) return null;
-  const email = getAuthEmail(request);
-  if (!email) {
+  if (!getAuthEmail(request, env)) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },

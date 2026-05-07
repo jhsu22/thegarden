@@ -19,7 +19,7 @@ const getSeason = (month) => {
   return 'winter';
 };
 
-const Sidebar = ({ view, setView, counts, navOpen, onNewBed, canEdit }) => {
+const Sidebar = ({ view, setView, counts, navOpen, onNewBed, canEdit, onLogout }) => {
   const now = new Date();
   const season = getSeason(now.getMonth());
   const thisMonthEntries = Object.values(ALL_DATA).flat().filter((i) => {
@@ -147,6 +147,14 @@ const Sidebar = ({ view, setView, counts, navOpen, onNewBed, canEdit }) => {
             {season} season · {thisMonthEntries} entries this month
           </div>
         </div>
+        {canEdit && onLogout && (
+          <button onClick={onLogout} style={{
+            marginTop: 10, width: '100%', padding: '7px 0',
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1.4,
+            textTransform: 'uppercase', color: 'var(--ink-soft)',
+          }}>sign out</button>
+        )}
       </div>
     </aside>
   );

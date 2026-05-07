@@ -21,7 +21,7 @@ export const GET: APIRoute = async ({ locals }) => {
 };
 
 export const PUT: APIRoute = async ({ request, locals }) => {
-  const guard = requireAuth(request);
+  const guard = requireAuth(request, locals.runtime.env as any);
   if (guard) return guard;
 
   const { SETTINGS } = locals.runtime.env;

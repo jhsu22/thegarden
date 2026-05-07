@@ -201,6 +201,69 @@ const reactDomSrc = isProd
     </div>
   );
 
+  const LoginModal = ({ onLogin, onClose, error }) => {
+    const [pw, setPw] = useState('');
+    const [busy, setBusy] = useState(false);
+    const submit = async (e) => {
+      e.preventDefault();
+      setBusy(true);
+      await onLogin(pw);
+      setBusy(false);
+    };
+    return (
+      <div onClick={onClose} style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(60,40,50,0.36)', backdropFilter: 'blur(6px)',
+        display: 'grid', placeItems: 'center', padding: 32,
+      }}>
+        <div onClick={(e) => e.stopPropagation()} style={{
+          background: 'var(--paper)', borderRadius: 22, padding: 32,
+          maxWidth: 360, width: '100%',
+          border: '1px solid var(--rule)',
+          boxShadow: '0 24px 60px -20px rgba(60,40,50,0.4)',
+        }}>
+          <div style={{
+            fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 500,
+            color: 'var(--ink)', marginBottom: 6, letterSpacing: -0.4,
+          }}>welcome back.</div>
+          <p style={{
+            fontFamily: 'var(--font-display)', fontStyle: 'italic',
+            fontSize: 14.5, color: 'var(--ink-soft)', margin: '0 0 22px',
+          }}>enter your password to tend the garden.</p>
+          <form onSubmit={submit}>
+            <input
+              type="password" value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              placeholder="password"
+              autoFocus
+              style={{
+                width: '100%', padding: '10px 14px', borderRadius: 10,
+                border: '1px solid var(--rule)', background: 'var(--paper-warm)',
+                fontFamily: 'var(--font-ui)', fontSize: 14, color: 'var(--ink)',
+                outline: 'none', boxSizing: 'border-box', marginBottom: error ? 8 : 14,
+              }}
+            />
+            {error && (
+              <div style={{
+                fontFamily: 'var(--font-ui)', fontSize: 12.5,
+                color: '#c0392b', marginBottom: 12,
+              }}>{error}</div>
+            )}
+            <button type="submit" disabled={busy || !pw} style={{
+              width: '100%', padding: '11px 0', borderRadius: 10,
+              background: 'var(--accent-strong)', border: 'none',
+              cursor: busy ? 'default' : 'pointer',
+              fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 500,
+              color: 'var(--paper)', opacity: busy ? 0.7 : 1,
+            }}>
+              {busy ? 'entering…' : 'enter the garden'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   function App() {
     const [loading, setLoading]       = useState(true);
     const [canEdit, setCanEdit]       = useState(false);
@@ -212,6 +275,8 @@ const reactDomSrc = isProd
     const [addingBed, setAddingBed]   = useState(false);
     const [navOpen, setNavOpen]       = useState(false);
     const [bump, setBump]             = useState(0);
+    const [loginOpen, setLoginOpen]   = useState(false);
+    const [loginError, setLoginError] = useState('');
 
     useEffect(() => {
       Promise.all([
@@ -226,6 +291,30 @@ const reactDomSrc = isProd
           .catch(() => {}),
       ]).then(() => setLoading(false));
     }, []);
+
+    const handleLogin = async (password) => {
+      try {
+        const r = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+        });
+        if (r.ok) {
+          setCanEdit(true);
+          setLoginOpen(false);
+          setLoginError('');
+        } else {
+          setLoginError('Wrong password. Try again.');
+        }
+      } catch {
+        setLoginError('Login failed — check your connection.');
+      }
+    };
+
+    const handleLogout = async () => {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setCanEdit(false);
+    };
 
     if (loading) return <LoadingScreen />;
 
@@ -259,7 +348,7 @@ const reactDomSrc = isProd
           <span></span>
         </button>
         <div className={`scrim ${navOpen ? 'open' : ''}`} onClick={() => setNavOpen(false)} />
-        <Sidebar view={view} setView={goView} counts={counts} navOpen={navOpen} onNewBed={() => setAddingBed(true)} canEdit={canEdit} />
+        <Sidebar view={view} setView={goView} counts={counts} navOpen={navOpen} onNewBed={() => setAddingBed(true)} canEdit={canEdit} onLogout={handleLogout} />
 
         <main style={{
           flex: 1, padding: 'var(--pad-main)', maxWidth: 'var(--max-main)',
@@ -279,7 +368,7 @@ const reactDomSrc = isProd
             canEdit={canEdit}
           />
         )}
-        {adding && (
+        {canEdit && adding && (
           <AddSheet
             initialCat={adding.cat} weights={weights}
             onClose={() => setAdding(false)}
@@ -303,20 +392,42 @@ const reactDomSrc = isProd
           />
         )}
 
-        <button
-          onClick={() => openAdd(view.name === 'browse' ? view.cat : undefined)}
-          aria-label="Add new entry"
-          style={{
-            position: 'fixed', bottom: 32, right: 32, zIndex: 89,
-            width: 56, height: 56, borderRadius: '50%',
-            background: 'var(--accent-strong)', border: 'none', cursor: 'pointer',
-            display: 'grid', placeItems: 'center',
-            boxShadow: '0 8px 24px -8px rgba(217, 122, 135, 0.65)',
-            color: 'var(--paper)',
-          }}
-        >
-          <span style={{ fontSize: 28, lineHeight: 1, display: 'block', marginTop: -2 }}>+</span>
-        </button>
+        {canEdit ? (
+          <button
+            onClick={() => openAdd(view.name === 'browse' ? view.cat : undefined)}
+            aria-label="Add new entry"
+            style={{
+              position: 'fixed', bottom: 32, right: 32, zIndex: 89,
+              width: 56, height: 56, borderRadius: '50%',
+              background: 'var(--accent-strong)', border: 'none', cursor: 'pointer',
+              display: 'grid', placeItems: 'center',
+              boxShadow: '0 8px 24px -8px rgba(217, 122, 135, 0.65)',
+              color: 'var(--paper)',
+            }}
+          >
+            <span style={{ fontSize: 28, lineHeight: 1, display: 'block', marginTop: -2 }}>+</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => { setLoginError(''); setLoginOpen(true); }}
+            style={{
+              position: 'fixed', bottom: 32, right: 32, zIndex: 89,
+              padding: '10px 18px', borderRadius: 999,
+              background: 'var(--paper)', border: '1px solid var(--rule)',
+              cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 11,
+              letterSpacing: 1.4, textTransform: 'uppercase', color: 'var(--ink-soft)',
+              boxShadow: '0 4px 12px -4px rgba(60,40,50,0.15)',
+            }}
+          >login</button>
+        )}
+
+        {loginOpen && (
+          <LoginModal
+            onLogin={handleLogin}
+            onClose={() => { setLoginOpen(false); setLoginError(''); }}
+            error={loginError}
+          />
+        )}
       </div>
     );
   }
