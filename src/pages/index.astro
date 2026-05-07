@@ -61,7 +61,10 @@ const reactDomSrc = isProd
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    overflow-x: hidden;
   }
+
+  * { -webkit-tap-highlight-color: transparent; }
 
   body::before {
     content: '';
@@ -125,45 +128,95 @@ const reactDomSrc = isProd
     animation: fadeIn 200ms ease;
   }
 
+  /* Mobile bottom nav — hidden on desktop */
+  .mobile-nav { display: none; }
+  /* Desktop FAB/login pill — hidden on mobile */
+  .desktop-fab { }
+
+  @keyframes slideUpSheet {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
   @media (max-width: 880px) {
-    :root { --pad-main: 80px 18px 60px; }
-    .menu-btn { display: flex; }
-    .sidebar {
-      position: fixed !important;
-      top: 0; left: 0; bottom: 0;
-      transform: translateX(-100%);
-      transition: transform 220ms cubic-bezier(0.2, 0.9, 0.3, 1);
-      z-index: 50;
-      box-shadow: 0 0 40px -10px rgba(60, 40, 50, 0.3);
+    /* Layout */
+    :root { --pad-main: 16px 16px 80px; }
+
+    /* Hide desktop chrome — replaced by bottom nav */
+    .menu-btn  { display: none !important; }
+    .sidebar   { display: none !important; }
+    .scrim     { display: none !important; }
+    .desktop-fab { display: none !important; }
+
+    /* Show mobile nav */
+    .mobile-nav { display: flex !important; }
+
+    /* Modals: slide up from bottom as sheets */
+    .detail-overlay {
+      align-items: flex-end !important;
+      padding: 0 !important;
     }
-    .sidebar.open { transform: translateX(0); }
-    .scrim.open { display: block; }
-    .grid-stat { grid-template-columns: repeat(2, 1fr) !important; }
-    .grid-cats, .grid-tops { grid-template-columns: 1fr !important; }
-    .greeting-h1 { font-size: 36px !important; }
-    .browse-h1, .dash-h1 { font-size: 32px !important; }
-    .detail-modal { max-height: 92vh !important; }
-    .detail-header-row { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
-    .add-sheet { max-width: 100% !important; }
-    .toolbar-row { flex-wrap: wrap; }
-    .feed-row {
-      grid-template-columns: 56px 1fr auto !important;
-      gap: 12px !important;
+    .detail-modal {
+      border-radius: 24px 24px 0 0 !important;
+      max-width: 100% !important;
+      max-height: 94vh !important;
+      animation: slideUpSheet 300ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
     }
+    .add-sheet-overlay {
+      align-items: flex-end !important;
+      padding: 0 !important;
+    }
+    .add-sheet {
+      border-radius: 24px 24px 0 0 !important;
+      max-width: 100% !important;
+      max-height: 94vh !important;
+      animation: slideUpSheet 300ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+    }
+
+    /* Grids */
+    .grid-stat  { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+    .grid-cats  { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+    .grid-tops  { grid-template-columns: 1fr !important; }
+
+    /* Typography */
+    .greeting-h1 { font-size: 30px !important; }
+    .browse-h1, .dash-h1 { font-size: 26px !important; }
+
+    /* Detail view */
+    .pad-detail { padding: 20px !important; }
+    .detail-header-row {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 14px !important;
+    }
+
+    /* Feed */
+    .feed-row { grid-template-columns: 52px 1fr auto !important; gap: 12px !important; }
+
+    /* Score table */
     .score-table-row {
-      grid-template-columns: 1.2fr 1fr 1fr 1fr !important;
-      padding: 10px 12px !important;
+      grid-template-columns: 1.1fr 1fr 1fr 1fr !important;
+      padding: 8px 12px !important;
     }
-    .pad-detail { padding: 22px !important; }
+
+    /* Add sheet internals */
+    .toolbar-row { flex-wrap: wrap; gap: 8px !important; }
+    .cat-grid-3  { grid-template-columns: repeat(3, 1fr) !important; }
   }
 
   @media (max-width: 480px) {
-    .grid-stat { grid-template-columns: 1fr !important; }
-    .greeting-h1 { font-size: 30px !important; }
-    .browse-h1, .dash-h1 { font-size: 26px !important; }
+    :root { --pad-main: 12px 14px 76px; }
+    .grid-stat   { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+    .grid-cats   { grid-template-columns: 1fr !important; }
+    .greeting-h1 { font-size: 26px !important; }
+    .browse-h1, .dash-h1 { font-size: 22px !important; }
     .add-sheet-grid-2 { grid-template-columns: 1fr !important; }
-    .rater-grid { grid-template-columns: 1fr !important; }
-    .cat-grid-3 { grid-template-columns: 1fr 1fr !important; }
+    .rater-grid  { grid-template-columns: 1fr !important; }
+    .cat-grid-3  { grid-template-columns: 1fr 1fr !important; }
+    .score-table-row {
+      grid-template-columns: 1fr 1fr 1fr 1fr !important;
+      font-size: 12px;
+    }
   }
 </style>
 </head>
@@ -400,6 +453,7 @@ const reactDomSrc = isProd
 
         {canEdit ? (
           <button
+            className="desktop-fab"
             onClick={() => openAdd(view.name === 'browse' ? view.cat : undefined)}
             aria-label="Add new entry"
             style={{
@@ -415,6 +469,7 @@ const reactDomSrc = isProd
           </button>
         ) : (
           <button
+            className="desktop-fab"
             onClick={() => { setLoginError(''); setLoginOpen(true); }}
             style={{
               position: 'fixed', bottom: 32, right: 32, zIndex: 89,
@@ -426,6 +481,17 @@ const reactDomSrc = isProd
             }}
           >login</button>
         )}
+
+        <MobileBottomNav
+          view={view}
+          setView={goView}
+          canEdit={canEdit}
+          onAdd={() => openAdd(view.name === 'browse' ? view.cat : undefined)}
+          onLogin={() => { setLoginError(''); setLoginOpen(true); }}
+          onNewBed={() => setAddingBed(true)}
+          onLogout={handleLogout}
+          counts={counts}
+        />
 
         {loginOpen && (
           <LoginModal

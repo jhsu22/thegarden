@@ -728,6 +728,7 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete, canEdit
 
   return (
     <div
+      className="detail-overlay"
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 100,
@@ -1134,6 +1135,7 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
 
   return (
     <div
+      className="add-sheet-overlay"
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 110,
@@ -1556,4 +1558,147 @@ const RaterBlock = ({ label, rates, setRates, weights }) => {
 };
 
 
-Object.assign(window, { Sidebar, HomeView, BrowseView, DetailView, AddSheet });
+// ───────────────────────────────────────────────────────────────
+// Mobile bottom nav + category sheet
+// ───────────────────────────────────────────────────────────────
+const MobileBottomNav = ({ view, setView, canEdit, onAdd, onLogin, onNewBed, onLogout, counts }) => {
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const close = () => setSheetOpen(false);
+  const isBrowse = view.name === 'browse';
+  const activeCat = isBrowse ? CATEGORIES.find((c) => c.id === view.cat) : null;
+
+  const Tab = ({ label, active, onClick, icon }) => (
+    <button onClick={onClick} style={{
+      flex: 1, display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      gap: 3, padding: '10px 0 8px',
+      background: 'none', border: 'none', cursor: 'pointer',
+    }}>
+      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 22 }}>{icon}</span>
+      <span style={{
+        fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: 1.1,
+        textTransform: 'uppercase',
+        color: active ? 'var(--accent-strong)' : 'var(--ink-soft)',
+      }}>{label}</span>
+    </button>
+  );
+
+  return (
+    <>
+      {sheetOpen && (
+        <div onClick={close} style={{
+          position: 'fixed', inset: 0, zIndex: 96,
+          background: 'rgba(60,40,50,0.28)', backdropFilter: 'blur(4px)',
+        }}>
+          <div onClick={(e) => e.stopPropagation()} style={{
+            position: 'absolute', bottom: 64, left: 0, right: 0,
+            background: 'var(--paper)', borderRadius: '22px 22px 0 0',
+            padding: '0 16px 16px',
+            boxShadow: '0 -8px 40px -10px rgba(60,40,50,0.2)',
+            maxHeight: '72vh', overflowY: 'auto',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 16px' }}>
+              <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--rule)' }} />
+            </div>
+            <div style={{
+              fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1.6,
+              textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 12,
+            }}>the beds</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 14 }}>
+              {CATEGORIES.map((c) => {
+                const isActive = isBrowse && view.cat === c.id;
+                return (
+                  <button key={c.id} onClick={() => { setView({ name: 'browse', cat: c.id }); close(); }} style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                    padding: '14px 8px 12px', borderRadius: 14,
+                    border: '1px solid', borderColor: isActive ? 'var(--accent-strong)' : 'var(--rule)',
+                    background: isActive ? 'var(--accent-soft)' : 'var(--paper-warm)',
+                    cursor: 'pointer',
+                  }}>
+                    <CatGlyph kind={c.glyph} size={22} color={isActive ? 'var(--accent-strong)' : 'var(--ink-soft)'} />
+                    <div>
+                      <div style={{
+                        fontFamily: 'var(--font-ui)', fontSize: 11, fontWeight: 500,
+                        color: isActive ? 'var(--accent-strong)' : 'var(--ink)', textAlign: 'center',
+                      }}>{c.label.split(' ')[0]}</div>
+                      <div style={{
+                        fontFamily: 'var(--font-mono)', fontSize: 9.5,
+                        color: 'var(--ink-soft)', textAlign: 'center', marginTop: 2,
+                      }}>{counts[c.id] || 0}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {canEdit && (
+              <div style={{ display: 'flex', gap: 8, paddingTop: 12, borderTop: '1px solid var(--rule)' }}>
+                <button onClick={() => { onNewBed(); close(); }} style={{
+                  flex: 1, padding: '10px 0', borderRadius: 10,
+                  border: '1px dashed var(--rule)', background: 'none',
+                  cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 13,
+                  color: 'var(--ink-soft)',
+                }}>+ new bed</button>
+                <button onClick={() => { onLogout(); close(); }} style={{
+                  padding: '10px 18px', borderRadius: 10,
+                  border: '1px solid var(--rule)', background: 'none', cursor: 'pointer',
+                  fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1.2,
+                  textTransform: 'uppercase', color: 'var(--ink-soft)',
+                }}>sign out</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <nav className="mobile-nav" style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 97,
+        display: 'flex', background: 'var(--paper-warm)',
+        borderTop: '1px solid var(--rule)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}>
+        <Tab
+          label="Home" active={view.name === 'home'}
+          icon={<LeafMark size={18} color={view.name === 'home' ? 'var(--accent-strong)' : 'var(--ink-soft)'} />}
+          onClick={() => { setView({ name: 'home' }); close(); }}
+        />
+        <Tab
+          label={activeCat ? activeCat.label.split(' ')[0] : 'Beds'}
+          active={isBrowse || sheetOpen}
+          icon={
+            <CatGlyph
+              kind={activeCat?.glyph || 'cup'}
+              size={18}
+              color={isBrowse || sheetOpen ? 'var(--accent-strong)' : 'var(--ink-soft)'}
+            />
+          }
+          onClick={() => setSheetOpen(!sheetOpen)}
+        />
+        <Tab
+          label="Charts" active={view.name === 'dashboard'}
+          icon={<Sparkle size={15} color={view.name === 'dashboard' ? 'var(--accent-strong)' : 'var(--ink-soft)'} />}
+          onClick={() => { setView({ name: 'dashboard' }); close(); }}
+        />
+        {canEdit ? (
+          <button onClick={() => { onAdd(); close(); }} style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: 3, padding: '10px 0 8px',
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--accent-strong)',
+          }}>
+            <span style={{ fontSize: 26, lineHeight: 1, display: 'flex', alignItems: 'center', height: 22 }}>+</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: 1.1, textTransform: 'uppercase' }}>add</span>
+          </button>
+        ) : (
+          <Tab
+            label="Login" active={false}
+            icon={<span style={{ fontSize: 14, color: 'var(--ink-soft)' }}>→</span>}
+            onClick={() => { onLogin(); close(); }}
+          />
+        )}
+      </nav>
+    </>
+  );
+};
+
+Object.assign(window, { Sidebar, HomeView, BrowseView, DetailView, AddSheet, MobileBottomNav });
