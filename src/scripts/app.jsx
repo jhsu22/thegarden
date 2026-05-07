@@ -19,7 +19,7 @@ const getSeason = (month) => {
   return 'winter';
 };
 
-const Sidebar = ({ view, setView, counts, navOpen, onNewBed, canEdit, onLogout, onReorderBeds }) => {
+const Sidebar = ({ view, setView, counts, navOpen, onNewBed, canEdit, onLogout, onReorderBeds, onClose }) => {
   const now = new Date();
   const season = getSeason(now.getMonth());
   const [dragId, setDragId] = useState(null);
@@ -70,6 +70,7 @@ const Sidebar = ({ view, setView, counts, navOpen, onNewBed, canEdit, onLogout, 
 
   return (
     <aside className={`sidebar ${navOpen ? 'open' : ''}`}>
+      <button className="sidebar-close" onClick={onClose} aria-label="Close menu">×</button>
       {/* Logo / wordmark */}
       <div style={{ padding: '0 6px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -242,7 +243,7 @@ const FeedRow = ({ row, onOpen, weights }) => {
           fontFamily: 'var(--font-ui)', fontSize: 12.5, color: 'var(--ink-soft)',
           textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap',
         }}>
-          {row.location || row.author || row.artist || row.origin || row.kind || ''}
+          {row.location || row.author || row.artist || row.origin || (row.kind ? row.kind[0].toUpperCase() + row.kind.slice(1) : '')}
         </div>
       </div>
       <ScoreBadge score={row._score} size="sm" />

@@ -136,8 +136,12 @@ const reactDomSrc = isProd
   }
   .scrim.open { display: block; }
 
+  /* Sidebar close button — only shown on mobile */
+  .sidebar-close { display: none; }
+
   /* Sidebar — desktop sticky rail */
   .sidebar {
+    position: relative;
     width: 248px; flex-shrink: 0;
     padding: 28px 18px;
     border-right: 1px solid var(--rule);
@@ -158,6 +162,14 @@ const reactDomSrc = isProd
 
     /* Sidebar → fixed slide-in drawer */
     .menu-btn { display: flex; }
+    .sidebar-close {
+      display: flex; align-items: center; justify-content: center;
+      position: absolute; top: 14px; right: 14px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--paper); border: 1px solid var(--rule);
+      cursor: pointer; font-size: 18px; color: var(--ink-soft);
+      line-height: 1;
+    }
     .sidebar {
       position: fixed;
       top: 0; left: 0;
@@ -435,11 +447,13 @@ const reactDomSrc = isProd
 
     return (
       <div style={{ display: 'flex', minHeight: '100vh' }} data-screen-label="App">
-        <button className="menu-btn" onClick={() => setNavOpen((o) => !o)} aria-label="Toggle menu">
-          <span></span>
-        </button>
+        {!navOpen && (
+          <button className="menu-btn" onClick={() => setNavOpen(true)} aria-label="Open menu">
+            <span></span>
+          </button>
+        )}
         <div className={`scrim ${navOpen ? 'open' : ''}`} onClick={() => setNavOpen(false)} />
-        <Sidebar view={view} setView={goView} counts={counts} navOpen={navOpen} onNewBed={() => setAddingBed(true)} canEdit={canEdit} onLogout={handleLogout} onReorderBeds={handleReorderBeds} />
+        <Sidebar view={view} setView={goView} counts={counts} navOpen={navOpen} onNewBed={() => setAddingBed(true)} canEdit={canEdit} onLogout={handleLogout} onReorderBeds={handleReorderBeds} onClose={() => setNavOpen(false)} />
 
         <main style={{
           flex: 1, padding: 'var(--pad-main)', maxWidth: 'var(--max-main)',

@@ -4,12 +4,12 @@
 
 const CATEGORIES = [
   { id: 'cafes',   label: 'Cafés & Restaurants', glyph: 'cup',    accent: 'rose',   rating: 'cafe',   extraField: 'location', kindSwitch: ['café', 'restaurant'] },
+  { id: 'coffee',  label: 'Coffee',              glyph: 'bean',   accent: 'butter', rating: 'simple', extraField: null },
   { id: 'cooking', label: 'Cooking',             glyph: 'whisk',  accent: 'butter', rating: 'simple', extraField: null,       kindSwitch: ['baked', 'cooked'] },
   { id: 'books',   label: 'Books',               glyph: 'book',   accent: 'clay',   rating: 'simple', extraField: 'author' },
   { id: 'movies',  label: 'Movies',              glyph: 'reel',   accent: 'plum',   rating: 'simple', extraField: null },
   { id: 'shows',   label: 'Shows',               glyph: 'screen', accent: 'sage',   rating: 'simple', extraField: null },
   { id: 'albums',  label: 'Albums',              glyph: 'disc',   accent: 'sky',    rating: 'simple', extraField: 'artist' },
-  { id: 'coffee',  label: 'Coffee',              glyph: 'bean',   accent: 'butter', rating: 'simple', extraField: null },
 ];
 
 const DEFAULT_WEIGHTS = {
