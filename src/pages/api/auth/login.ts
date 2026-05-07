@@ -4,8 +4,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const { password } = (await request.json()) as { password: string };
   const env = locals.runtime.env as { GARDEN_PASSWORD?: string };
 
-  if (!env.GARDEN_PASSWORD || password !== env.GARDEN_PASSWORD) {
-    return new Response(JSON.stringify({ error: 'Wrong password' }), {
+  if (!env.GARDEN_PASSWORD) {
+    return new Response(JSON.stringify({ error: 'GARDEN_PASSWORD not set on server — add it as a secret in Cloudflare Pages and redeploy.' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  if (password.trim() !== env.GARDEN_PASSWORD.trim()) {
+    return new Response(JSON.stringify({ error: 'Wrong password.' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
     });
