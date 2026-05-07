@@ -216,7 +216,7 @@ const FeedRow = ({ row, onOpen, weights }) => {
   );
 };
 
-const HomeView = ({ weights, onOpen, onAdd, canEdit }) => {
+const HomeView = ({ weights, onOpen, onAdd, bump, canEdit }) => {
   const today = new Date();
   const todayLabel = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
