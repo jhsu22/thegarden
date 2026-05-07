@@ -51,6 +51,14 @@ All `src/scripts/*.jsx` files are **not** processed by Vite as modules. They are
 components → photos → coffee → data → app → dashboard → new-bed
 ```
 
+**Critical pitfalls with this architecture:**
+
+1. **No module scope.** Each `src/scripts/*.jsx` file runs in global (window) scope. Variables are NOT shared between files unless explicitly put on `window` via `Object.assign(window, {...})`. A variable referenced in `app.jsx` that isn't on `window` and isn't declared in `app.jsx` will throw `ReferenceError` at runtime — there is no build-time check. Always verify that every variable a component uses is either (a) declared in the same file, (b) destructured from props, or (c) added to `window` by a previously loaded script.
+
+2. **Props must be destructured explicitly.** If a component receives a prop (e.g. `bump`) but doesn't destructure it, references to that name inside the component will resolve to the global scope — which is almost certainly undefined, causing a ReferenceError crash. The symptom is the loading screen flashing then a blank white screen, because the crash happens after `setLoading(false)`.
+
+3. **No SVG/JSX elements in the inline App script in `index.astro`.** The App component lives in a raw `<script type="text/babel">` block in `index.astro` (not via `?raw` + `set:html`). Astro's production build may process this tag differently. Keep that script's JSX to plain HTML-safe elements (no `<svg>`, `<path>`, etc.). Put complex JSX in the `src/scripts/` files instead.
+
 ### Data flow
 1. `App` mounts → calls `hydrate()`, `fetch('/api/settings')`, `fetch('/api/auth/me')` in parallel
 2. `hydrate()` GETs `/api/entries`, populates the global `ALL_DATA` object grouped by category
