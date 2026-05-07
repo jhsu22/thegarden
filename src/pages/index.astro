@@ -386,8 +386,23 @@ const reactDomSrc = isProd
           .then((r) => r.ok ? r.json() : null)
           .then((a) => { if (a?.authenticated) setCanEdit(true); })
           .catch(() => {}),
-      ]).then(() => setLoading(false));
+      ]).then(() => {
+        const p = new URLSearchParams(window.location.search);
+        const cat = p.get('cat'), entry = p.get('entry');
+        if (cat && entry && ALL_DATA[cat]) setDetail({ cat, id: entry });
+        setLoading(false);
+      });
     }, []);
+
+    useEffect(() => {
+      if (loading) return;
+      if (detail) {
+        const p = new URLSearchParams({ cat: detail.cat, entry: detail.id });
+        history.replaceState({}, '', '?' + p.toString());
+      } else if (window.location.search) {
+        history.replaceState({}, '', window.location.pathname);
+      }
+    }, [detail, loading]);
 
     const handleLogin = async (password) => {
       try {

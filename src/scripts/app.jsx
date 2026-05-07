@@ -824,6 +824,13 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete, canEdit
   const cat = CATEGORIES.find((c) => c.id === catId);
   const isCafe = catId === 'cafes';
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   return (
     <div
@@ -855,16 +862,29 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete, canEdit
           borderBottom: '1px solid var(--rule)',
           position: 'relative',
         }}>
-          <button
-            onClick={onClose}
-            style={{
-              position: 'absolute', top: 18, right: 18,
-              width: 32, height: 32, borderRadius: '50%',
-              background: 'var(--paper)', border: '1px solid var(--rule)',
-              cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 16,
-              color: 'var(--ink-soft)',
-            }}
-          >×</button>
+          <div style={{ position: 'absolute', top: 18, right: 18, display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              onClick={handleShare}
+              style={{
+                height: 32, padding: '0 12px', borderRadius: 999,
+                background: copied ? 'var(--accent-soft)' : 'var(--paper)',
+                border: '1px solid var(--rule)', cursor: 'pointer',
+                fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1.2,
+                textTransform: 'uppercase',
+                color: copied ? 'var(--accent-strong)' : 'var(--ink-soft)',
+                transition: 'color 150ms, background 150ms',
+              }}
+            >{copied ? 'copied!' : 'share'}</button>
+            <button
+              onClick={onClose}
+              style={{
+                width: 32, height: 32, borderRadius: '50%',
+                background: 'var(--paper)', border: '1px solid var(--rule)',
+                cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 16,
+                color: 'var(--ink-soft)',
+              }}
+            >×</button>
+          </div>
 
           <div className="detail-header-row" style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
             <div className="detail-photo-wrap" style={{ flexShrink: 0 }}>
