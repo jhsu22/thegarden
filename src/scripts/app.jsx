@@ -1,6 +1,17 @@
 // Main app — sidebar nav, dashboard, browse, add-entry, detail
 const { useState, useEffect, useMemo, useRef } = React;
 
+const fmtItemPrice = (price, catId) => {
+  if (price == null || price === '') return '';
+  if (catId === 'cafes') {
+    const SIGNS = ['$', '$$', '$$$', '$$$$'];
+    const n = Math.round(parseFloat(price));
+    return n >= 1 && n <= 4 ? ` · ${SIGNS[n - 1]}` : '';
+  }
+  if (catId === 'cooking') return ` · $${price} per serving`;
+  return ` · $${price}`;
+};
+
 // Renders a category glyph by string id, including the special "leaf" + "sparkle" glyphs
 // that live outside the Glyph SVG library.
 const CatGlyph = ({ kind, size = 18, color = 'var(--ink-soft)' }) => {
@@ -83,7 +94,7 @@ const Sidebar = ({ view, setView, counts, navOpen, onNewBed, canEdit, onLogout, 
             <span style={{
               fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: 1.6,
               textTransform: 'uppercase', color: 'var(--ink-soft)', marginTop: 4,
-            }}>est. 2026 · v0.4</span>
+            }}>est. 2026</span>
           </div>
         </div>
       </div>
@@ -254,16 +265,18 @@ const FeedRow = ({ row, onOpen, weights }) => {
 const HomeView = ({ weights, onOpen, onAdd, bump, canEdit }) => {
   const today = new Date();
   const todayLabel = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const [visibleCount, setVisibleCount] = useState(20);
 
   const feed = useMemo(() => flatFeed(weights), [weights, bump]);
+  const visibleFeed = useMemo(() => feed.slice(0, visibleCount), [feed, visibleCount]);
   const byMonth = useMemo(() => {
     const groups = {};
-    for (const r of feed) {
+    for (const r of visibleFeed) {
       const k = fmtMonthYear(r.date);
       (groups[k] = groups[k] || []).push(r);
     }
     return groups;
-  }, [feed]);
+  }, [visibleFeed]);
 
   // Stats
   const total = feed.length;
@@ -403,6 +416,11 @@ const HomeView = ({ weights, onOpen, onAdd, bump, canEdit }) => {
             ))}
           </div>
         ))}
+        {feed.length > visibleCount && (
+          <div style={{ textAlign: 'center', marginTop: 8, marginBottom: 24 }}>
+            <Button variant="ghost" onClick={() => setVisibleCount((c) => c + 10)}>load 10 more</Button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -416,6 +434,15 @@ const BrowseView = ({ catId, weights, onOpen, onAdd, canEdit }) => {
   const items = ALL_DATA[catId];
   const [sort, setSort] = useState('recent');
   const [query, setQuery] = useState('');
+  const [kindFilter, setKindFilter] = useState('all');
+  const [diffFilter, setDiffFilter] = useState('all');
+  const [bookClubOnly, setBookClubOnly] = useState(false);
+
+  useEffect(() => {
+    setKindFilter('all');
+    setDiffFilter('all');
+    setBookClubOnly(false);
+  }, [catId]);
 
   const rows = useMemo(() => {
     let r = items.map((i) => ({ ...i, _score: itemScore(catId, i, weights) }));
@@ -427,12 +454,22 @@ const BrowseView = ({ catId, weights, onOpen, onAdd, canEdit }) => {
         (i.tags || []).some((t) => t.includes(q))
       );
     }
+    if (catId === 'cafes' && kindFilter !== 'all') {
+      r = r.filter((i) => i.kind === kindFilter);
+    }
+    if (catId === 'cooking') {
+      if (kindFilter !== 'all') r = r.filter((i) => i.kind === kindFilter);
+      if (diffFilter !== 'all') r = r.filter((i) => i.difficulty === diffFilter);
+    }
+    if (catId === 'books' && bookClubOnly) {
+      r = r.filter((i) => (i.tags || []).includes('bookclub'));
+    }
     r.sort((a, b) => {
       if (sort === 'score') return b._score - a._score;
       return a.date < b.date ? 1 : -1;
     });
     return r;
-  }, [items, sort, query, weights, catId]);
+  }, [items, sort, query, weights, catId, kindFilter, diffFilter, bookClubOnly]);
 
   return (
     <div>
@@ -455,7 +492,7 @@ const BrowseView = ({ catId, weights, onOpen, onAdd, canEdit }) => {
 
       {/* Toolbar */}
       <div className="toolbar-row" style={{
-        display: 'flex', gap: 12, alignItems: 'center', marginBottom: 24,
+        display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12,
         padding: '10px 14px', background: 'var(--paper-warm)',
         borderRadius: 12, border: '1px solid var(--rule)',
       }}>
@@ -468,6 +505,13 @@ const BrowseView = ({ catId, weights, onOpen, onAdd, canEdit }) => {
             fontFamily: 'var(--font-ui)', fontSize: 14, color: 'var(--ink)',
           }}
         />
+        {query && (
+          <button onClick={() => setQuery('')} style={{
+            background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px',
+            fontFamily: 'var(--font-ui)', fontSize: 17, lineHeight: 1,
+            color: 'var(--ink-soft)', flexShrink: 0,
+          }}>×</button>
+        )}
         <div style={{
           display: 'flex', gap: 4, padding: 3,
           background: 'var(--paper)', borderRadius: 999, border: '1px solid var(--rule)',
@@ -487,6 +531,61 @@ const BrowseView = ({ catId, weights, onOpen, onAdd, canEdit }) => {
         </div>
         {canEdit && <Button onClick={() => onAdd(catId)}>＋ add</Button>}
       </div>
+
+      {/* Filter pills */}
+      {(catId === 'cafes' || catId === 'cooking' || catId === 'books') && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 20, alignItems: 'center' }}>
+          {catId === 'cafes' && ['all', 'café', 'restaurant'].map((k) => (
+            <button key={k} onClick={() => setKindFilter(k)} style={{
+              padding: '5px 14px', borderRadius: 999, cursor: 'pointer',
+              border: `1px solid ${kindFilter === k ? 'var(--accent-strong)' : 'var(--rule)'}`,
+              background: kindFilter === k ? 'var(--accent-soft)' : 'var(--paper)',
+              color: kindFilter === k ? 'var(--ink)' : 'var(--ink-soft)',
+              fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.1,
+              textTransform: 'capitalize',
+            }}>{k === 'all' ? 'all types' : k}</button>
+          ))}
+
+          {catId === 'cooking' && (
+            <>
+              {['all', 'cooked', 'baked'].map((k) => (
+                <button key={`kind-${k}`} onClick={() => setKindFilter(k)} style={{
+                  padding: '5px 14px', borderRadius: 999, cursor: 'pointer',
+                  border: `1px solid ${kindFilter === k ? 'var(--accent-strong)' : 'var(--rule)'}`,
+                  background: kindFilter === k ? 'var(--accent-soft)' : 'var(--paper)',
+                  color: kindFilter === k ? 'var(--ink)' : 'var(--ink-soft)',
+                  fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.1,
+                  textTransform: 'capitalize',
+                }}>{k === 'all' ? 'all types' : k}</button>
+              ))}
+              <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--rule)', margin: '0 2px' }} />
+              {[['all', 'all levels', null], ['easy', 'easy', DIFF_STYLE.easy], ['medium', 'medium', DIFF_STYLE.medium], ['hard', 'hard', DIFF_STYLE.hard]].map(([val, label, ds]) => {
+                const active = diffFilter === val;
+                return (
+                  <button key={`diff-${val}`} onClick={() => setDiffFilter(val)} style={{
+                    padding: '5px 14px', borderRadius: 999, cursor: 'pointer',
+                    border: `1px solid ${active ? (ds ? ds.ink : 'var(--accent-strong)') : 'var(--rule)'}`,
+                    background: active ? (ds ? ds.bg : 'var(--accent-soft)') : 'var(--paper)',
+                    color: active ? (ds ? ds.ink : 'var(--ink)') : 'var(--ink-soft)',
+                    fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.1,
+                    textTransform: 'capitalize',
+                  }}>{label}</button>
+                );
+              })}
+            </>
+          )}
+
+          {catId === 'books' && (
+            <button onClick={() => setBookClubOnly(!bookClubOnly)} style={{
+              padding: '5px 14px', borderRadius: 999, cursor: 'pointer',
+              border: `1px solid ${bookClubOnly ? 'var(--accent-strong)' : 'var(--rule)'}`,
+              background: bookClubOnly ? 'var(--accent-soft)' : 'var(--paper)',
+              color: bookClubOnly ? 'var(--ink)' : 'var(--ink-soft)',
+              fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 1.1,
+            }}>book club only</button>
+          )}
+        </div>
+      )}
 
       {/* Grid */}
       <div style={{
@@ -793,7 +892,7 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete, canEdit
                 {(catId === 'coffee'
                   ? (item.origin || item.roaster)
                   : (item.author || item.artist || item.location)) && ' · '}
-                {fmtDate(item.date)}{item.price ? ` · $${item.price}` : ''}
+                {fmtDate(item.date)}{fmtItemPrice(item.price, catId)}
               </div>
             </div>
           </div>
@@ -979,7 +1078,11 @@ const CafeScoreTable = ({ item, weights }) => {
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, color: 'var(--ink)' }}>{label}</div>
               <div style={{
                 fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: 1, color: 'var(--ink-soft)',
-              }}>J {Math.round(wJ[k] * 100)}% · S {Math.round(wS[k] * 100)}%</div>
+                lineHeight: 1.6,
+              }}>
+                <div>J {Math.round(wJ[k] * 100)}%</div>
+                <div>S {Math.round(wS[k] * 100)}%</div>
+              </div>
             </div>
             <ScoreCell value={me} />
             <ScoreCell value={sam} />
@@ -1227,9 +1330,28 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
             <Field label="Date">
               <Input value={date} onChange={setDate} type="date" />
             </Field>
-            <Field label="Price ($)">
-              <Input value={price} onChange={setPrice} placeholder="optional" />
-            </Field>
+            {isCafe ? (
+              <Field label="Price">
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {[['', '—'], ['1', '$'], ['2', '$$'], ['3', '$$$'], ['4', '$$$$']].map(([v, label]) => {
+                    const active = price === v;
+                    return (
+                      <button key={v} onClick={() => setPrice(v)} style={{
+                        flex: 1, padding: '8px 2px', borderRadius: 8, cursor: 'pointer',
+                        border: `1px solid ${active ? 'var(--accent-strong)' : 'var(--rule)'}`,
+                        background: active ? 'var(--accent-soft)' : 'var(--paper)',
+                        color: active ? 'var(--ink)' : 'var(--ink-soft)',
+                        fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 0.3,
+                      }}>{label}</button>
+                    );
+                  })}
+                </div>
+              </Field>
+            ) : (
+              <Field label="Price ($)">
+                <Input value={price} onChange={setPrice} placeholder="optional" />
+              </Field>
+            )}
           </div>
 
           {/* Coffee — origin + roaster right after date/price */}
