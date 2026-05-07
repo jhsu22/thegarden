@@ -69,13 +69,7 @@ const Sidebar = ({ view, setView, counts, navOpen, onNewBed, canEdit, onLogout, 
   );
 
   return (
-    <aside className={`sidebar ${navOpen ? 'open' : ''}`} style={{
-      width: 248, padding: '28px 18px',
-      borderRight: '1px solid var(--rule)',
-      background: 'var(--paper-warm)',
-      display: 'flex', flexDirection: 'column', gap: 24,
-      position: 'sticky', top: 0, height: '100vh',
-    }}>
+    <aside className={`sidebar ${navOpen ? 'open' : ''}`}>
       {/* Logo / wordmark */}
       <div style={{ padding: '0 6px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -734,7 +728,7 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete, canEdit
         position: 'fixed', inset: 0, zIndex: 100,
         background: 'rgba(60, 40, 50, 0.36)',
         backdropFilter: 'blur(6px)',
-        display: 'grid', placeItems: 'center', padding: 32,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32,
         animation: 'fadeIn 200ms ease',
       }}
     >
@@ -1142,7 +1136,7 @@ const AddSheet = ({ initialCat, editCatId, editItem, weights, onClose, onSaved }
       style={{
         position: 'fixed', inset: 0, zIndex: 110,
         background: 'rgba(60, 40, 50, 0.4)', backdropFilter: 'blur(6px)',
-        display: 'grid', placeItems: 'center', padding: 32,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32,
         animation: 'fadeIn 200ms ease',
       }}
     >
