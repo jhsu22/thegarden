@@ -1,0 +1,17 @@
+{
+  "name": "The Garden",
+  "short_name": "The Garden",
+  "description": "A quiet record of small things — eaten, watched, read, made.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbf6f1",
+  "theme_color": "#d97a87",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

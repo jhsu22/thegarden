@@ -768,7 +768,9 @@ const DetailView = ({ catId, itemId, weights, onClose, onEdit, onDelete, canEdit
           >×</button>
 
           <div className="detail-header-row" style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-            <PhotoDisplay entryId={item.id} tone={item.photo.tone} shape={item.photo.shape} size="lg" label="photo" />
+            <div className="detail-photo-wrap" style={{ flexShrink: 0 }}>
+              <PhotoDisplay entryId={item.id} tone={item.photo.tone} shape={item.photo.shape} size="lg" label="photo" />
+            </div>
             <div style={{ flex: 1, paddingTop: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <CatGlyph kind={cat.glyph} size={14} color="var(--accent-strong)" />
@@ -1701,4 +1703,4 @@ const MobileBottomNav = ({ view, setView, canEdit, onAdd, onLogin, onNewBed, onL
   );
 };
 
-Object.assign(window, { Sidebar, HomeView, BrowseView, DetailView, AddSheet, MobileBottomNav });
+Object.assign(window, { Sidebar, HomeView, BrowseView, DetailView, AddSheet });
