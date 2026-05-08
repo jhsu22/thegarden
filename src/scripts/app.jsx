@@ -112,6 +112,17 @@ const Sidebar = ({ view, setView, counts, navOpen, onNewBed, canEdit, onLogout, 
           active={view.name === 'dashboard'}
           onClick={() => setView({ name: 'dashboard' })}
         />
+        <NavItem
+          id="monthly" label="Monthly"
+          icon={
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--accent-strong)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="1" y="2.5" width="14" height="12.5" rx="2"/>
+              <path d="M1 6.5h14M5 1v3M11 1v3"/>
+            </svg>
+          }
+          active={view.name === 'monthly'}
+          onClick={() => setView({ name: 'monthly' })}
+        />
       </div>
 
       <div>
@@ -1845,4 +1856,160 @@ const MobileBottomNav = ({ view, setView, canEdit, onAdd, onLogin, onNewBed, onL
   );
 };
 
-Object.assign(window, { Sidebar, HomeView, BrowseView, DetailView, AddSheet });
+// ───────────────────────────────────────────────────────────────
+// Monthly Recap — top 3 entries per category, grouped by month
+// ───────────────────────────────────────────────────────────────
+const MonthlyView = ({ weights, onOpen, bump }) => {
+  const feed = useMemo(() => flatFeed(weights), [weights, bump]);
+
+  const months = useMemo(() => {
+    const result = {};
+    for (const r of feed) {
+      const key = fmtMonthYear(r.date);
+      if (!result[key]) result[key] = { cats: {}, total: 0 };
+      if (!result[key].cats[r._cat]) result[key].cats[r._cat] = [];
+      result[key].cats[r._cat].push(r);
+      result[key].total++;
+    }
+    for (const month of Object.values(result)) {
+      for (const catId of Object.keys(month.cats)) {
+        month.cats[catId] = [...month.cats[catId]]
+          .sort((a, b) => b._score - a._score)
+          .slice(0, 3);
+      }
+    }
+    return result;
+  }, [feed]);
+
+  const RANK_INK = ['var(--accent-strong)', 'var(--ink)', 'var(--ink-soft)'];
+
+  return (
+    <div>
+      <header style={{ marginBottom: 32 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="var(--accent-strong)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="1.5" y="3" width="15" height="13.5" rx="2.5"/>
+            <path d="M1.5 7.5h15M5.5 1v4M12.5 1v4"/>
+          </svg>
+          <span style={{
+            fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1.6,
+            textTransform: 'uppercase', color: 'var(--ink-soft)',
+          }}>Monthly recap</span>
+        </div>
+        <h1 className="browse-h1" style={{
+          fontFamily: 'var(--font-display)', fontSize: 44, fontWeight: 500,
+          color: 'var(--ink)', margin: 0, letterSpacing: -1, lineHeight: 1.05,
+        }}>by month</h1>
+        <div style={{ marginTop: 8 }}>
+          <Squiggle width={80} color="var(--accent-strong)" strokeWidth={2} />
+        </div>
+      </header>
+
+      {Object.entries(months).map(([month, { cats: catMap, total }]) => {
+        const activeCats = CATEGORIES.filter((c) => catMap[c.id]?.length > 0);
+        return (
+          <div key={month} style={{ marginBottom: 52 }}>
+            {/* Month header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, padding: '6px 0',
+            }}>
+              <span style={{
+                fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500,
+                color: 'var(--ink)', letterSpacing: -0.4, whiteSpace: 'nowrap',
+              }}>{month.toLowerCase()}</span>
+              <div style={{ flex: 1 }}><Squiggle width="100%" color="var(--rule)" strokeWidth={1.2} /></div>
+              <span style={{
+                fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-soft)',
+                letterSpacing: 1.2, whiteSpace: 'nowrap',
+              }}>{total} {total === 1 ? 'entry' : 'entries'}</span>
+            </div>
+
+            {/* Category cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+              gap: 14,
+            }}>
+              {activeCats.map((cat) => {
+                const entries = catMap[cat.id];
+                return (
+                  <div key={cat.id} style={{
+                    background: 'var(--paper)', border: '1px solid var(--rule)',
+                    borderRadius: 18, overflow: 'hidden',
+                    boxShadow: '0 1px 0 rgba(120,80,90,0.04), 0 8px 24px -16px rgba(120,80,90,0.18)',
+                  }}>
+                    {/* Card header */}
+                    <div style={{
+                      padding: '13px 16px 11px', background: 'var(--paper-warm)',
+                      borderBottom: '1px solid var(--rule)',
+                      display: 'flex', alignItems: 'center', gap: 10,
+                    }}>
+                      <div style={{
+                        width: 28, height: 28, borderRadius: 8,
+                        background: 'var(--accent-soft)',
+                        display: 'grid', placeItems: 'center', flexShrink: 0,
+                      }}>
+                        <CatGlyph kind={cat.glyph} size={15} color="var(--accent-strong)" />
+                      </div>
+                      <span style={{
+                        fontFamily: 'var(--font-display)', fontSize: 14.5,
+                        fontWeight: 500, color: 'var(--ink)', flex: 1,
+                      }}>{cat.label}</span>
+                    </div>
+
+                    {/* Entry rows */}
+                    <div>
+                      {entries.map((entry, i) => (
+                        <div
+                          key={entry.id}
+                          onClick={() => onOpen(cat.id, entry.id)}
+                          className="monthly-row"
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 12,
+                            padding: '11px 16px', cursor: 'pointer',
+                            borderBottom: i < entries.length - 1 ? '1px solid var(--rule)' : 'none',
+                          }}
+                        >
+                          <span style={{
+                            fontFamily: 'var(--font-display)', fontSize: 13,
+                            fontWeight: 600, color: RANK_INK[i],
+                            minWidth: 16, textAlign: 'center', flexShrink: 0,
+                          }}>{i + 1}</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                              fontFamily: 'var(--font-display)', fontSize: 14.5,
+                              color: 'var(--ink)', overflow: 'hidden',
+                              textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            }}>{entry.name}</div>
+                            {(entry.location || entry.author || entry.artist || entry.origin) && (
+                              <div style={{
+                                fontFamily: 'var(--font-ui)', fontSize: 11.5,
+                                color: 'var(--ink-soft)', overflow: 'hidden',
+                                textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1,
+                              }}>{entry.location || entry.author || entry.artist || entry.origin}</div>
+                            )}
+                          </div>
+                          <ScoreBadge score={entry._score} size="sm" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+
+      {Object.keys(months).length === 0 && (
+        <div style={{
+          textAlign: 'center', padding: '64px 0',
+          fontFamily: 'var(--font-display)', fontStyle: 'italic',
+          color: 'var(--ink-soft)',
+        }}>nothing planted yet.</div>
+      )}
+    </div>
+  );
+};
+
+Object.assign(window, { Sidebar, HomeView, BrowseView, DetailView, AddSheet, MonthlyView });

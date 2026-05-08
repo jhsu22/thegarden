@@ -103,6 +103,9 @@ const reactDomSrc = isProd
   ::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 999px; border: 2px solid var(--paper); }
   ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
+  .monthly-row { transition: background 120ms; }
+  .monthly-row:hover { background: var(--paper-warm); }
+
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes slideUp {
     from { opacity: 0; transform: translateY(20px) scale(0.98); }
@@ -476,6 +479,7 @@ const reactDomSrc = isProd
         }} data-screen-label={view.name}>
           {view.name === 'home'      && <HomeView      weights={weights} onOpen={openDetail} onAdd={openAdd} bump={bump} canEdit={canEdit} />}
           {view.name === 'dashboard' && <DashboardView weights={weights} onOpen={openDetail} bump={bump} />}
+          {view.name === 'monthly'   && <MonthlyView   weights={weights} onOpen={openDetail} bump={bump} />}
           {view.name === 'browse'    && <BrowseView    catId={view.cat} weights={weights} onOpen={openDetail} onAdd={openAdd} bump={bump} canEdit={canEdit} />}
         </main>
 
